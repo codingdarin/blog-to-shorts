@@ -5,7 +5,8 @@
 ## 실행
 
 Node.js 24 이상에서 `npm ci`, `npm start` 실행 후 http://localhost:4310 접속.
-구문 검증: `npm run check`.
+React + shadcn/ui + Tailwind CSS 화면을 Vite로 빌드한다. `npm start`는 빌드 후 서버를 실행한다.
+구문/타입 검증: `npm run check`. 별도 화면 빌드: `npm run build`.
 
 ## 무료 AI 연결
 

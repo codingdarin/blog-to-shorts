@@ -40,6 +40,6 @@ http.createServer(async(req,res)=>{try{
  res.writeHead(200,{'Content-Type':'video/mp4','Content-Disposition':'attachment; filename="local-short.mp4"','X-Video-Duration':duration.toFixed(1)});res.end(video);return;
  }
  const files={'/':'index.html','/app.js':'app.js','/style.css':'style.css'};
- if(req.method==='GET'&&files[url.pathname]){res.writeHead(200,{'Content-Type':url.pathname.endsWith('.js')?'text/javascript':url.pathname.endsWith('.css')?'text/css':'text/html; charset=utf-8'});res.end(await readFile('public/'+files[url.pathname]));return;}
+ if(req.method==='GET'&&files[url.pathname]){const file=await readFile('dist/'+files[url.pathname]);res.writeHead(200,{'Content-Type':url.pathname.endsWith('.js')?'text/javascript':url.pathname.endsWith('.css')?'text/css':'text/html; charset=utf-8'});res.end(file);return;}
  json(res,404,{error:'찾을 수 없습니다.'});
  }catch(error){json(res,500,{error:error.message});}}).listen(port,'127.0.0.1',()=>console.log(`Local: http://localhost:${port}`));

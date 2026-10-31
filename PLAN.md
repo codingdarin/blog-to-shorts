@@ -83,3 +83,11 @@
 - 파일: `local-data/deliverables/gangnam-news-short.mp4`, 같은 폴더의 `gangnam-news-short-credits.md`.
 - 무료 로컬 TTS 사용. ElevenLabs 로그인과 잔여 10,000크레딧만 확인했고 크레딧 소비/결제는 하지 않았다.
 - 한계: 기사 현장 사진 자동 식별이 아니라 지역 자료사진 검색이다. AI 대본은 사실/문체 검토가 필요하다. 배포는 다음 작업이다.
+
+## shadcn/ui 화면 전환
+
+- 사용자 결정: shadcn/ui 사용, 베이지색 배경 금지. 흰색 카드와 차가운 회색 배경, 검정 버튼으로 구성했다.
+- React + Vite + Tailwind CSS로 화면을 구성하고 공식 shadcn Button, Card, Input, Textarea, Badge를 적용했다. 기존 뉴스/대본/사진/영상 흐름은 유지했다.
+- 검증: 구문/TypeScript 검사 및 프로덕션 빌드 통과. 브라우저 뉴스 12건 수집, 기사 선택, 수동 예시 4장면 편집, 사진 4장 자동 수집, 한국어 내레이션 MP4 다운로드 성공.
+- UI 회귀 테스트 출력: 1080 x 1920, 13.6초. 전체 디코딩 종료 코드 0. 이번 테스트는 수동 예시이며 AI API를 재호출하지 않았다.
+- 스크린샷: local-data/deliverables/shadcn-ui.png. 외부 배포는 미실행.

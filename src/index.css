@@ -1,0 +1,19 @@
+@import "tailwindcss";
+@theme inline {
+ --color-background: var(--background); --color-foreground: var(--foreground);
+ --color-card: var(--card); --color-card-foreground: var(--foreground);
+ --color-primary: var(--primary); --color-primary-foreground: #fff;
+ --color-secondary: #f4f4f5; --color-secondary-foreground: #18181b;
+ --color-muted: #f4f4f5; --color-muted-foreground: #71717a;
+ --color-accent: #f4f4f5; --color-accent-foreground: #18181b;
+ --color-destructive: #dc2626; --color-border: #e4e4e7; --color-input: #e4e4e7; --color-ring: #a1a1aa;
+ --radius-sm: 0.375rem; --radius-md: 0.5rem; --radius-lg: 0.75rem; --radius-xl: 1rem;
+}
+:root{--background:#f8fafc;--foreground:#18181b;--card:#fff;--primary:#18181b;font-family:Inter,Arial,'Malgun Gothic',sans-serif;color:var(--foreground);background:var(--background)}
+body{margin:0}button,input,textarea{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed}[hidden]{display:none!important}
+.hint{font-size:12px;color:#71717a;line-height:1.7}.field-label{font-size:13px;font-weight:600;display:block;margin-bottom:8px}
+#news{max-height:280px;overflow:auto;display:grid;gap:8px}#news:empty{display:none}.article{background:#fff;border:1px solid #e4e4e7;border-radius:8px;padding:12px 14px;text-align:left;font-size:13px;line-height:1.7;transition:background .15s}.article:hover{background:#f8fafc}.article.selected{border-color:#2563eb;background:#eff6ff}.article small{display:block;color:#71717a;margin-top:3px;font-size:11px}
+#editors{display:grid;gap:8px}#editors:empty{display:none}#editors label{font-size:12px;font-weight:600;margin-top:8px;color:#52525b}#editors textarea{border:1px solid #e4e4e7;border-radius:8px;background:#fff;width:100%;padding:10px 12px;min-height:76px;font-size:13px;line-height:1.7;resize:vertical}#editors textarea:focus{outline:2px solid #a1a1aa;outline-offset:1px}
+#warnings:empty{display:none}#warnings{color:#52525b;font-size:12px;line-height:1.7;background:#f4f4f5;border-radius:8px;padding:12px}#source{font-size:12px;color:#2563eb;text-decoration:underline}#photo-credits:empty{display:none}
+.check{width:16px;height:16px;accent-color:#18181b;flex-shrink:0}.preview-canvas{display:block;width:100%;border-radius:14px;background:#000}.preview-grid{background-color:#f4f4f5;background-image:radial-gradient(#d4d4d8 .7px,transparent .7px);background-size:12px 12px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
