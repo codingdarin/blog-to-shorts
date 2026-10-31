@@ -4,13 +4,16 @@ import {randomUUID} from 'node:crypto';
 import path from 'node:path';
 import ffmpeg from 'ffmpeg-static';
 import {musicWav,musicCatalog} from './music.mjs';
+import {generateElevenScenes} from './elevenlabs.mjs';
 function run(command,args){return new Promise((resolve,reject)=>{const p=spawn(command,args,{windowsHide:true});let log='';p.stderr.on('data',x=>{log=(log+x).slice(-4000);});p.on('error',reject);p.on('close',code=>code===0?resolve(log):reject(Error(command===ffmpeg?'영상 변환 실패':'한국어 음성 합성 실패. 설치된 음성을 확인하세요.')));});}
 function wavDuration(b){let rate=0,size=0;for(let i=12;i+8<=b.length;){const tag=b.toString('ascii',i,i+4),n=b.readUInt32LE(i+4);if(tag==='fmt ')rate=b.readUInt32LE(i+16);if(tag==='data')size=n;i+=8+n+(n%2);}if(!rate||!size)throw Error('음성 길이 확인 실패');return size/rate;}
-export async function renderVideo(frames,texts,voice,audio={music:'none',volume:.16,sfx:false}){
+export async function renderVideo(frames,texts,voice,audio={music:'none',volume:.16,sfx:false},tts={provider:'local'}){
  const dir=path.resolve('renders',randomUUID());await mkdir(dir,{recursive:true});
  try{
  for(let i=0;i<4;i++)await writeFile(path.join(dir,`${i}.png`),Buffer.from(frames[i].split(',')[1],'base64'));
- if(voice){await writeFile(path.join(dir,'speech.json'),JSON.stringify(texts));await run('powershell.exe',['-NoProfile','-File',path.resolve('voice.ps1'),'-InputFile',path.join(dir,'speech.json'),'-OutputDirectory',dir]);}
+ if(voice&&tts.provider==='elevenlabs'){
+  await generateElevenScenes(texts,tts.voiceId,async(i,bytes)=>{const mp3=path.join(dir,`${i}.mp3`);await writeFile(mp3,bytes);await run(ffmpeg,['-y','-i',mp3,'-ar','24000','-ac','1','-c:a','pcm_s16le',path.join(dir,`${i}.wav`)]);});
+ }else if(voice){await writeFile(path.join(dir,'speech.json'),JSON.stringify(texts));await run('powershell.exe',['-NoProfile','-File',path.resolve('voice.ps1'),'-InputFile',path.join(dir,'speech.json'),'-OutputDirectory',dir]);}
  let duration=0;const cuts=[];
  for(let i=0;i<4;i++){
  const seconds=voice?Math.ceil(Math.max(3,wavDuration(await readFile(path.join(dir,`${i}.wav`)))+.35)*30)/30:5;if(i)cuts.push(duration);duration+=seconds;

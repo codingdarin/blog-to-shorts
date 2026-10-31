@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {availableCredits,generateElevenScenes,elevenOptions} from '../elevenlabs.mjs';
+const texts=Array(4).fill('축제가 열렸어요.');
+const account=async()=>({ready:true,voices:[{id:'test-voice'}],remaining:1000});
+test('credit balance never counts paid overage',()=>{assert.equal(availableCredits({character_limit:100,character_count:99,can_extend_character_limit:true}),1);assert.equal(availableCredits({character_limit:10,character_count:20}),0);assert.throws(()=>availableCredits({}));});
+test('missing key leaves local voice available',async()=>{const saved=process.env.ELEVENLABS_API_KEY;delete process.env.ELEVENLABS_API_KEY;try{assert.equal((await elevenOptions()).ready,false);}finally{if(saved)process.env.ELEVENLABS_API_KEY=saved;}});
+test('unknown voice or insufficient credits never starts synthesis',async()=>{let requests=0;const request=async()=>{requests++;};await assert.rejects(generateElevenScenes(texts,'unknown',()=>{},account,request),/선택/);await assert.rejects(generateElevenScenes(texts,'test-voice',()=>{},async()=>({...await account(),remaining:1}),request),/부족/);assert.equal(requests,0);});
+test('four scene requests use multilingual model and preserve Korean text',async()=>{let requests=0;const saved=[];await generateElevenScenes(texts,'test-voice',async(i,b)=>saved.push([i,b.length]),account,async(url,options)=>{requests++;const payload=JSON.parse(options.body);assert.equal(payload.text,texts[0]);assert.equal(payload.model_id,'eleven_multilingual_v2');assert.match(url,/mp3_44100_128/);return new Response(new Uint8Array([1,2,3]),{headers:{'Content-Type':'audio/mpeg'}});});assert.equal(requests,4);assert.deepEqual(saved.map(x=>x[0]),[0,1,2,3]);});
+test('upstream failure does not retry or silently switch voice',async()=>{let requests=0;await assert.rejects(generateElevenScenes(texts,'test-voice',()=>{},account,async()=>{requests++;throw Error('quota failure');}),/quota failure/);assert.equal(requests,1);});
+test('non-audio output is not passed to the renderer',async()=>{await assert.rejects(generateElevenScenes(texts,'test-voice',()=>{throw Error('must not save');},account,async()=>new Response('{}',{headers:{'Content-Type':'application/json'}})),/음성 파일/);});

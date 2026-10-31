@@ -1,4 +1,5 @@
 import {filterPromotionNews} from './news-filter.mjs';
+import {elevenOptions} from './elevenlabs.mjs';
 import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {renderVideo} from './render.mjs';
@@ -17,6 +18,7 @@ http.createServer(async(req,res)=>{try{
  const url=new URL(req.url,'http://localhost');
  if(req.method==='POST' && req.headers.origin && req.headers.origin!==`http://localhost:${port}` && req.headers.origin!==`http://127.0.0.1:${port}`)return json(res,403,{error:'허용되지 않은 요청'});
  if(url.pathname==='/api/status')return json(res,200,{aiReady:!!(process.env.NVIDIA_API_KEY||process.env.GEMINI_API_KEY)&&process.env.AI_FREE_TIER_CONFIRMED==='true',tourReady:!!process.env.TOUR_API_KEY});
+ if(req.method==='GET'&&url.pathname==='/api/voices')return json(res,200,await elevenOptions());
  if(req.method==='GET'&&url.pathname==='/api/articles'){const q=(url.searchParams.get('q')||'축제').slice(0,80);const data=await (url.searchParams.get('provider')==='gyeonggi'?searchGyeonggiArticles:searchArticles)(q);return json(res,200,await filterPromotionNews(data.items,q));}
  if(req.method==='POST'&&url.pathname==='/api/prepare'){
   const input=await body(req),article=await getArticle(input.url),plan=await planArticle(article);
@@ -48,12 +50,13 @@ http.createServer(async(req,res)=>{try{
  return json(res,200,{scenes:result.scenes,warnings:['AI 초안의 날짜, 수치, 평가 표현을 원문과 대조하세요. 제목만으로 생성하면 세부 정보가 부족합니다.'],mode:'ai'});
  }
  if(req.method==='POST'&&url.pathname==='/api/render'){
- const {frames,texts,voice=false,audio={music:'none',volume:.16,sfx:false}}=await body(req);
+ const {frames,texts,voice=false,audio={music:'none',volume:.16,sfx:false},tts={provider:'local'}}=await body(req);
+ if(typeof voice!=='boolean'||!['local','elevenlabs'].includes(tts?.provider))return json(res,400,{error:'내레이션 설정을 확인해 주세요.'});
  if(!Array.isArray(frames)||frames.length!==4||frames.some(f=>typeof f!=='string'||!f.startsWith('data:image/png;base64,')))return json(res,400,{error:'장면 이미지 4개가 필요합니다.'});
  if(voice&&(!Array.isArray(texts)||texts.length!==4||texts.some(t=>typeof t!=='string'||!t.trim()||t.length>100)))return json(res,400,{error:'음성 대본 4개를 확인하세요.'});
  if(!Array.isArray(texts)||texts.length!==4||narrationStyleIssues(texts).length)return json(res,400,{error:'모든 자막·내레이션 문장을 존댓말 해요체로 작성해 주세요. 예: 열렸어요, 볼 수 있어요.'});
  if(!musicCatalog.some(m=>m.id===audio?.music)||!Number.isFinite(audio.volume)||audio.volume<0||audio.volume>.5||typeof audio.sfx!=='boolean')return json(res,400,{error:'음향 설정을 확인하세요.'});
- const {video,duration}=await renderVideo(frames,texts,voice,audio);
+ const {video,duration}=await renderVideo(frames,texts,voice,audio,tts);
  res.writeHead(200,{'Content-Type':'video/mp4','Content-Disposition':'attachment; filename="local-short.mp4"','X-Video-Duration':duration.toFixed(1)});res.end(video);return;
  }
  const files={'/':'index.html','/app.js':'app.js','/style.css':'style.css'};
