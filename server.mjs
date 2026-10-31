@@ -21,8 +21,12 @@ http.createServer(async(req,res)=>{try{
  if(req.method==='GET'&&url.pathname==='/api/voices')return json(res,200,await elevenOptions());
  if(req.method==='GET'&&url.pathname==='/api/articles'){const q=(url.searchParams.get('q')||'축제').slice(0,80);const data=await (url.searchParams.get('provider')==='gyeonggi'?searchGyeonggiArticles:searchArticles)(q);return json(res,200,await filterPromotionNews(data.items,q));}
  if(req.method==='POST'&&url.pathname==='/api/prepare'){
-  const input=await body(req),article=await getArticle(input.url),plan=await planArticle(article);
-  const photos=await Promise.all(article.photos.map(downloadPhoto));
+  const input=await body(req);let article,plan,photos=[];
+  let stage='기사 수집';const started=Date.now();
+  try{article=await getArticle(input.url);stage='AI 대본 생성';plan=await planArticle(article);stage='행사 사진 다운로드';for(const photo of article.photos)photos.push(await downloadPhoto(photo));}
+  catch(e){console.error('prepare',stage,e.cause?.code||e.name,Date.now()-started);throw Error(`${stage}에 실패했어요. ${e.message==='fetch failed'?'외부 서비스 연결을 확인하고 다시 시도해 주세요.':e.message}`);}
+  console.log('prepare complete',Date.now()-started);
+
   return json(res,200,{article:{title:article.title,text:article.text,url:article.url,source:article.source,license:article.license},headline:plan.headline,scenes:plan.scenes,photos,warnings:['기사의 행사 연도, 인물, 사진과 대본의 일치를 확인하세요. AI 매칭은 사진 설명을 기준으로 합니다.']});
  }
  if(req.method==='GET'&&url.pathname==='/api/music')return json(res,200,{tracks:musicCatalog.map(({file,preview,...rest})=>rest),defaultId:musicCatalog[0].id});

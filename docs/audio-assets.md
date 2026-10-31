@@ -47,3 +47,5 @@
 | local-data/deliverables/goyang-elevenlabs.mp4 | salsa / Happy Latin Salsa Dance / kornevmusic / 위 원본 및 Pixabay 라이선스 동일 | 16.3초, 16%, 시작/끝 페이드, 자체 합성 컷 전환음 3곳 | ElevenLabs Laura, multilingual v2, 무료 포함 크레딧 115 사용 |
 
 기사/사진 출처는 local-data/deliverables/goyang-elevenlabs-credits.md에 기록했다.
+
+- 2026-10-31 버튼 전체 흐름 검증: local-data/deliverables/goyang-roger-button.mp4, 16.6초. salsa 기본곡 16%, 자체 전환음 3곳, ElevenLabs Roger 내레이션. 기존 고양 기사/사진 및 Pixabay 원본 링크와 라이선스 동일.
