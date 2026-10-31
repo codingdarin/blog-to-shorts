@@ -1,0 +1,26 @@
+# Local settings and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+mds/
+
+# Generated web files
+node_modules/
+dist/
+build/
+.next/
+.wrangler/
+.vercel/
+coverage/
+*.log
+
+# Local media inputs and generated output
+local-data/
+renders/
+
+# Editor and operating system files
+.idea/
+.DS_Store
+Thumbs.db
