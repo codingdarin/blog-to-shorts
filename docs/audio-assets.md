@@ -49,3 +49,5 @@
 기사/사진 출처는 local-data/deliverables/goyang-elevenlabs-credits.md에 기록했다.
 
 - 2026-10-31 버튼 전체 흐름 검증: local-data/deliverables/goyang-roger-button.mp4, 16.6초. salsa 기본곡 16%, 자체 전환음 3곳, ElevenLabs Roger 내레이션. 기존 고양 기사/사진 및 Pixabay 원본 링크와 라이선스 동일.
+
+- 공개 데모 docs/demo.mp4 (한국어 16.6초), docs/demo-en.mp4 (영어 19.0초): salsa 16%, 자체 전환 효과음, ElevenLabs Roger. Pixabay 원본/라이선스 동일. 비상업적 해커톤 시연. 상세 기사/사진/음성 출처 docs/demo-credits.md.

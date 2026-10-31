@@ -31,3 +31,5 @@ TourAPI 고양가을꽃축제 contentId 1725993, 2026-10-01~2026-10-11.
 
 결과: demo.mp4 / 16.6초 / 1080x1920 / 2,483,127 bytes.
 음성 출처: https://elevenlabs.io / Roger / eleven_multilingual_v2. 비상업적 해커톤 시연.
+
+영어 버전: demo-en.mp4 / 19.0초 / 동일 기사와 사진, AI 영어 번역 및 Roger 영어 더빙. 대본과 사진은 실제 자동 생성 결과이며 수동 대본 수정 없음.

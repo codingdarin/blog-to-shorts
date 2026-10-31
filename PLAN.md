@@ -195,3 +195,11 @@
 - 실제 사이트: 10월 일정 조회 -> 고양가을꽃축제 선택 -> 만들기 1회 -> 실제 AI 대본/기사 사진/Roger/기본 브금/효과음 -> 16.6초 MP4 생성/다운로드 성공. 이번 결과 대본과 사진을 수동 수정하지 않았다.
 - 결과 local-data/deliverables/goyang-roger-button.mp4. 브라우저 실제 재생 준비 readyState 4, 1080x1920, 16.633334초, media error 없음. 전체 FFmpeg 디코딩 exit 0. 화면 증빙 roger-button-success.png.
 - 테스트 25/25, 타입/구문 검사 및 빌드 통과. 모든 행사에서 사진 자동화가 되는 것은 아니며 기존 용인/경기 공공누리 제1유형 지원 범위 유지. 공개 배포/추가 결제 없음.
+
+## 공개 제출 저장소, Pages, 영어 번역/더빙 (2026-10-31)
+
+- 사용자 공개 승인에 따라 https://github.com/codingdarin/local-shorts 저장소 생성, origin 연결 및 업로드. 과거 커밋까지 주요 키 패턴 검사 결과 0건, .env는 이력에 없으며 .env.example만 추적됨.
+- GitHub Pages: https://codingdarin.github.io/local-shorts/ . feat/local-shorts-mvp 브랜치 /docs에서 배포. 최초 Pages built 및 HTTP 200 확인. 소개, 실제 MP4, 출처, 로컬 실행 안내 공개. 서버 생성 기능을 정적 Pages에서 동작하는 것처럼 표시하지 않는다.
+- 영어 출력 선택 추가. 한국어 기사 초안/사진 순서를 유지한 AI 영어 번역 -> 영어 자막 및 ElevenLabs Roger 더빙 -> 기존 브금/효과음 합성. 한국어 해요체 검사는 한국어 출력에 유지. 영어 더빙은 ElevenLabs가 필요하다.
+- 실제 UI 일정 조회/고양 행사 선택/영어 선택/만들기 -> 다운로드 성공. docs/demo-en.mp4: 18.966667초, 1080x1920, 브라우저 media error 없음, 전체 디코딩 exit 0. 원어민 청취/번역 품질 전문 검수는 미실행.
+- 테스트 27/27, 타입/구문 검사 및 빌드 통과. 공개된 한국어/영어 영상에 ElevenLabs 무료 플랜 비상업용 출처 표시. 원본 기사·사진·음악 출처 docs/demo-credits.md.
