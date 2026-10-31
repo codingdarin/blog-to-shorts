@@ -210,3 +210,13 @@
 - PUBLIC_ORIGIN 허용 목록, /health, 동시 렌더 1개 제한, FFmpeg 스레드 2개 제한 및 배포 환경 음성 안내를 추가했다. docs/live.html은 live-config.json에 지정한 HTTPS trycloudflare 주소의 생성 화면을 표시한다.
 - Cloudflare 터널 다운로드/실행 명령이 자동 승인 검토에서 blocked by policy로 거부됐다. 사용자의 명시적 재승인 후 재시도도 같은 이유로 거부됐다. 터널은 실행되지 않았고 공개 서버 연결은 미완료다. 차단을 다른 도구로 우회하지 않았다.
 - 검증: 기존 테스트 27/27, 타입/구문 검사 및 빌드 통과. 공개 터널 URL이 없어 원격 API/영상 생성 검증 미실행. URL 수신 후 PUBLIC_ORIGIN 설정, 서버 재시작, live-config.json 및 제출 사이트 링크 배포가 남았다.
+
+## 공개 노트북 서버 연결 및 제출 사이트 검증 (2026-10-31)
+
+- 사용자가 실행한 터널 https://mrna-surfing-visible-devices.trycloudflare.com 을 PUBLIC_ORIGIN으로 설정하고 서버 재시작. 터널 프로세스는 변경하지 않았다. 공개 /health 및 /api/status HTTP 200, 공개 origin POST 통과 확인.
+- docs/live-config.json에 공개 주소를 등록하고 홈페이지의 직접 만들기 링크를 docs/live.html로 연결했다. Pages 002b603 built, HTTP 200 확인. 브라우저 캐시로 구 페이지가 보여 버전 쿼리로 최신 홈페이지와 버튼을 확인했다.
+- 제출 사이트 iframe 안에서 2026년 10월 일정 조회 -> 고양가을꽃축제 선택 -> 실제 AI/Roger/사진/음악/효과음 -> 17.6초 MP4 생성 성공. 브라우저 영상 1080x1920, media error 없음.
+- 임베디드 프레임의 blob 다운로드가 자동화 도구에서 지원되지 않아 서버 MP4 다운로드 주소를 추가했다. 최근 3개 영상만 메모리에 유지, 각 15분 후 만료. 파일 GET은 Content-Disposition attachment로 응답한다.
+- 최종 공개 HTTP 다운로드 200, video/mp4, 2,423,481 bytes, 전체 FFmpeg 디코딩 exit 0. local-data/deliverables/public-live.mp4 및 public-live-success.png 저장. 임베디드 프레임 자동화 downloadMedia는 일반 URL에서도 timeout이 발생했으므로 브라우저 자동 저장 성공으로 보고하지 않는다. 공개 URL에서 실제 파일 다운로드/무결성은 검증했다.
+- 테스트 27/27, 타입/구문 검사 및 빌드 통과. 사용자 제출 완료 확인. 노트북 및 터널 유지 필요, 재시작 시 주소 갱신 필요.
+- 드론봇 페스티벌 실패 조사: 전체 행사명 검색 0건, 드론봇 검색은 공식 기사 발견. 해당 제1유형 기사 이미지는 로고/포스터/시간표로 시각 확인했고 현장 사진으로 대체하지 않았다. 검색어 완화와 별도 포스터 안내 영상 기능은 미구현이다.

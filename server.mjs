@@ -1,3 +1,4 @@
+import {randomUUID} from 'node:crypto';
 import {translateEnglish} from './translation.mjs';
 import {filterPromotionNews} from './news-filter.mjs';
 import {elevenOptions} from './elevenlabs.mjs';
@@ -15,11 +16,13 @@ const port=Number(process.env.PORT||4310);
 const host=process.env.HOST||'127.0.0.1';
 const allowedOrigins=new Set([`http://localhost:${port}`,`http://127.0.0.1:${port}`,process.env.PUBLIC_ORIGIN].filter(Boolean));
 let renderBusy=false;
+const downloads=new Map();
 const json=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
 async function body(req){let chunks=[],size=0;for await(const chunk of req){size+=chunk.length;if(size>12e6)throw Error('요청이 너무 큽니다.');chunks.push(chunk);}return JSON.parse(Buffer.concat(chunks).toString());}
 const clean=s=>String(s||'').replace(/<[^>]*>/g,'').slice(0,2000);
 http.createServer(async(req,res)=>{try{
  const url=new URL(req.url,'http://localhost');
+ if(req.method==='GET'&&url.pathname.startsWith('/api/video/')){const id=url.pathname.slice('/api/video/'.length),video=downloads.get(id);if(!video)return json(res,404,{error:'다운로드 시간이 만료됐어요. 영상을 다시 만들어 주세요.'});res.writeHead(200,{'Content-Type':'video/mp4','Content-Length':video.length,'Content-Disposition':'attachment; filename=local-short.mp4'});res.end(video);return;}
  if(req.method==='POST' && req.headers.origin && !allowedOrigins.has(req.headers.origin))return json(res,403,{error:'허용되지 않은 요청'});
  if(req.method==='GET'&&url.pathname==='/health')return json(res,200,{ok:true});
  if(url.pathname==='/api/status')return json(res,200,{localTtsReady:process.platform==='win32',aiReady:!!(process.env.NVIDIA_API_KEY||process.env.GEMINI_API_KEY)&&process.env.AI_FREE_TIER_CONFIRMED==='true',tourReady:!!process.env.TOUR_API_KEY});
@@ -71,7 +74,8 @@ http.createServer(async(req,res)=>{try{
  if(voice&&tts.provider==='local'&&process.platform!=='win32')return json(res,400,{error:'배포 서버에서는 ElevenLabs 음성을 선택해 주세요. 기본 Windows 음성은 로컬에서만 사용할 수 있어요.'});
  if(renderBusy)return json(res,409,{error:'다른 영상을 생성하고 있어요. 잠시 후 다시 눌러 주세요.'});
  renderBusy=true;let video,duration;try{({video,duration}=await renderVideo(frames,texts,voice,audio,tts));}finally{renderBusy=false;}
- res.writeHead(200,{'Content-Type':'video/mp4','Content-Disposition':'attachment; filename="local-short.mp4"','X-Video-Duration':duration.toFixed(1)});res.end(video);return;
+ const videoId=randomUUID();while(downloads.size>=3)downloads.delete(downloads.keys().next().value);downloads.set(videoId,video);setTimeout(()=>downloads.delete(videoId),15*60*1000).unref();
+ res.writeHead(200,{'X-Video-Id':videoId,'Content-Type':'video/mp4','Content-Disposition':'attachment; filename="local-short.mp4"','X-Video-Duration':duration.toFixed(1)});res.end(video);return;
  }
  const files={'/':'index.html','/app.js':'app.js','/style.css':'style.css'};
  if(req.method==='GET'&&files[url.pathname]){const file=await readFile('dist/'+files[url.pathname]);res.writeHead(200,{'Content-Type':url.pathname.endsWith('.js')?'text/javascript':url.pathname.endsWith('.css')?'text/css':'text/html; charset=utf-8'});res.end(file);return;}
