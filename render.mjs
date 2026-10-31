@@ -17,7 +17,7 @@ export async function renderVideo(frames,texts,voice,audio={music:'none',volume:
  let duration=0;const cuts=[];
  for(let i=0;i<4;i++){
  const seconds=voice?Math.ceil(Math.max(3,wavDuration(await readFile(path.join(dir,`${i}.wav`)))+.35)*30)/30:5;if(i)cuts.push(duration);duration+=seconds;
- await run(ffmpeg,['-y','-loop','1','-i',path.join(dir,`${i}.png`),...(voice?['-i',path.join(dir,`${i}.wav`),'-af','apad=pad_dur=1','-c:a','aac','-ar','48000']:[]),'-vf','scale=1080:1920,setsar=1','-t',String(seconds),'-r','30','-c:v','libx264','-preset','ultrafast','-pix_fmt','yuv420p',path.join(dir,`${i}.mp4`)]);
+ await run(ffmpeg,['-y','-loop','1','-i',path.join(dir,`${i}.png`),...(voice?['-i',path.join(dir,`${i}.wav`),'-af','apad=pad_dur=1','-c:a','aac','-ar','48000']:[]),'-vf','scale=1080:1920,setsar=1','-t',String(seconds),'-r','30','-c:v','libx264','-threads','2','-preset','ultrafast','-pix_fmt','yuv420p',path.join(dir,`${i}.mp4`)]);
  }
  await writeFile(path.join(dir,'list.txt'),[0,1,2,3].map(i=>`file '${i}.mp4'`).join('\n'));
  await run(ffmpeg,['-y','-f','concat','-safe','0','-i',path.join(dir,'list.txt'),'-c','copy','-movflags','+faststart',path.join(dir,'short.mp4')]);

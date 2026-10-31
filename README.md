@@ -44,3 +44,9 @@ npm run build
 [기사·사진·음원 출처](docs/demo-credits.md), [음원 사용 기록](docs/audio-assets.md). 영상 사진은 중앙 크롭/크기 조정 후 자막을 합성했습니다.
 
 데모 영상 제목: 고양가을꽃축제 / elevenlabs.io. ElevenLabs 무료 플랜으로 생성한 비상업적 해커톤 시연 결과입니다. 사진·음원·음성 이용 조건은 소스코드와 별개입니다.
+
+## 노트북을 공개 시연 서버로 사용
+
+GitHub Pages 자체는 정적 호스팅입니다. 실제 생성은 노트북 Node 서버와 Cloudflare Quick Tunnel로 연결할 수 있습니다. 서버와 터널 프로세스, 노트북 전원 및 인터넷 연결을 유지해야 합니다. 임시 터널을 재시작하면 주소가 바뀌므로 `docs/live-config.json`의 URL과 서버의 `PUBLIC_ORIGIN`을 함께 갱신해야 합니다.
+
+공개 시연 중에는 동시 영상 합성을 1개로 제한합니다. API 키는 노트북 `.env`에만 저장합니다. `PUBLIC_ORIGIN=https://발급된주소.trycloudflare.com` 설정 후 서버를 재시작합니다.
