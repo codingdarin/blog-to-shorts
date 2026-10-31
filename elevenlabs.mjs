@@ -10,10 +10,10 @@ export function availableCredits(subscription){
  if(!Number.isFinite(limit)||!Number.isFinite(used))throw Error('ElevenLabs 잔여 크레딧을 확인하지 못했습니다.');
  return Math.max(0,limit-used);
 }
-export async function elevenOptions(){
+export async function elevenOptions(request=elevenRequest){
  if(!process.env.ELEVENLABS_API_KEY)return {ready:false,voices:[],notice:'ElevenLabs 연결 전입니다. 기본 무료 음성을 사용할 수 있어요.'};
- const [sub,data]=await Promise.all([elevenRequest('/v1/user/subscription').then(r=>r.json()),elevenRequest('/v2/voices?page_size=100').then(r=>r.json())]);
- const voices=(data.voices||[]).filter(v=>v.category==='default'||v.category==='generated').filter(v=>!v.available_for_tiers?.length||v.available_for_tiers.includes(sub.tier)).map(v=>({id:v.voice_id,name:v.name,language:v.labels?.language||'다국어'}));
+ const [sub,data]=await Promise.all([request('/v1/user/subscription').then(r=>r.json()),request('/v2/voices?page_size=100').then(r=>r.json())]);
+ const voices=(data.voices||[]).filter(v=>['premade','default','generated'].includes(v.category)).filter(v=>!v.available_for_tiers?.length||v.available_for_tiers.includes(sub.tier)).map(v=>({id:v.voice_id,name:v.name,language:v.labels?.language||'다국어'}));
  voices.sort((a,b)=>Number(/ko|korean/i.test(b.language))-Number(/ko|korean/i.test(a.language)));
  return {ready:voices.length>0,voices,remaining:availableCredits(sub),tier:sub.tier,notice:voices.length?'한국어 지원 다국어 모델을 사용해요. 생성 시 계정 크레딧이 차감돼요.':'사용 가능한 기본 음성을 찾지 못했습니다. 기본 무료 음성을 선택해 주세요.'};
 }

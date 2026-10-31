@@ -168,3 +168,11 @@
 - 검증: 테스트 24/24 통과, npm run check 및 npm run build 통과. 실행 서버 /api/voices HTTP 200, 키 미설정 상태 ready=false와 기본 무료 음성 안내 확인.
 - 현재 실제 .env에 ElevenLabs 키가 없어 계정 조회, 실제 ElevenLabs 음성 및 해당 영상 출력은 미검증이다. 모의 API 테스트와 실제 합성 검증을 구별한다. 사용자에게 키의 .env 저장을 요청한 상태다.
 - API 근거: https://elevenlabs.io/docs/api-reference/text-to-speech/convert 및 https://elevenlabs.io/docs/api-reference/user/subscription/get
+
+## ElevenLabs 실제 계정 및 영상 검증 (2026-10-31)
+
+- 사용자 키 저장 확인 후 서버 재시작. 무료 계정 포함 크레딧 10,000개 확인. 실제 기본 음성 category가 premade라 기존 필터에서 제외되던 문제를 수정하고 회귀 테스트를 추가했다. 계정 기본 음성 21개 조회 성공.
+- 사이트에서 고양가을꽃축제 기사 자동 구성 후 첫 훅/시제를 수동 검토 수정했다. Laura 기본 음성을 선택하고 multilingual v2로 한국어 4장면을 생성, salsa 16% 및 전환 효과음과 합성했다.
+- MP4 다운로드까지 실제 UI에서 확인. local-data/deliverables/goyang-elevenlabs.mp4: UI 16.3초, 1080x1920, 490프레임, 2,439,422 bytes, H.264/AAC. 전체 디코딩 exit 0. 실제 청취에 의한 발음/자연스러움 평가는 미실행이다.
+- 무료 크레딧 115 사용, 검증 후 9,885 잔여. 추가 결제 없음. 화면 잔여량은 페이지 로드 시 조회 값으로, 새로고침 전에는 이전 수치가 표시된다.
+- 테스트 25/25, 타입/구문 검사 및 빌드 통과. 영상/키는 Git 제외. 출처 파일 goyang-elevenlabs-credits.md, 화면 증빙 elevenlabs-ui.png.

@@ -39,3 +39,11 @@
 - 브금: salsa / Happy Latin Salsa Dance / kornevmusic / Pixabay Content License.
 - 20.27초, 음량 16%, 시작·끝 페이드. 컷 전환 효과음 3곳, 무료 Heami 내레이션과 혼합.
 - 기사/사진: 경기도뉴스포털, 안주형 기자, 공공누리 제1유형. 상세 원문/사진 링크는 `local-data/deliverables/goyang-festival-auto-credits.md`.
+
+## 추가 적용 기록: ElevenLabs 내레이션 검증
+
+| 결과물 | 브금 | 사용 방식 | 내레이션 |
+| --- | --- | --- | --- |
+| local-data/deliverables/goyang-elevenlabs.mp4 | salsa / Happy Latin Salsa Dance / kornevmusic / 위 원본 및 Pixabay 라이선스 동일 | 16.3초, 16%, 시작/끝 페이드, 자체 합성 컷 전환음 3곳 | ElevenLabs Laura, multilingual v2, 무료 포함 크레딧 115 사용 |
+
+기사/사진 출처는 local-data/deliverables/goyang-elevenlabs-credits.md에 기록했다.
