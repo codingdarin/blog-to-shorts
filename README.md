@@ -12,7 +12,7 @@ Node.js 24 이상에서 `npm ci`, `npm start` 실행 후 http://localhost:4310 �
 `.env.example`을 `.env`로 복사하고 `GEMINI_API_KEY`를 설정한다.
 키가 속한 Google AI Studio 프로젝트가 결제 없는 무료 등급임을 확인한 뒤 `AI_FREE_TIER_CONFIRMED=true`로 바꾼다.
 서버를 재시작한다. 키는 서버에서만 사용하며 Git에 포함하지 않는다.
-NVIDIA Build 무료 키는 `NVIDIA_API_KEY`로 설정한다. 설정되면 Nemotron 3.5 Lightning을 사용하며, 없으면 Gemini 3.8 Flash를 사용한다. 공급자 간 자동 재시도는 없다. NVIDIA 연결 코드는 준비됐지만 실제 호출은 아직 미검증이다.
+NVIDIA Build 무료 키는 `NVIDIA_API_KEY`로 설정한다. 설정되면 Nemotron 3.5 Lightning을 사용하며, 없으면 Gemini 3.8 Flash를 사용한다. 공급자 간 자동 재시도는 없다. NVIDIA 실제 호출 HTTP 200과 검토한 대본의 음성 MP4 다운로드를 검증했다.
 무료 한도 초과나 API 오류는 표시하고 자동 재시도/유료 전환하지 않는다.
 무료 요금 기준: https://ai.google.dev/gemini-api/docs/pricing
 
@@ -40,3 +40,5 @@ FFmpeg 실행이 필요한 로컬 Node 서버이며 정적 호스팅만으로는
 - 실제 기사 제목으로 생성 요청했으나 공급자 혼잡(503)으로 실패. 3.1 Flash-Lite와 Interactions API도 503. 실제 AI 대본 영상은 아직 미검증이며 배포는 미실행.
 - 레퍼런스 반영: 검정 배경, 흰색/노랑 고정 제목, 가운데 사진, 하단 자막. 제공 영상의 사진은 앱 자산으로 복제하지 않았다.
 - 로컬 한국어 합성 테스트: 1080 x 1920 H.264 + 48kHz AAC, 12.47초, 디코딩 종료 코드 0. 사진 파일 업로드 전체 흐름은 아직 미검증이다.
+
+- NVIDIA 후속 검증: 실제 기사 제목으로 AI 생성 성공. 초안에 근거 없는 문장이 있어 사람이 수정 후 내레이션 MP4 다운로드. 1080 x 1920, AAC, 16.36초, 디코딩 성공. 테스트 이미지 업로드도 확인했다. 실제 행사 사진은 미포함.
