@@ -32,3 +32,10 @@
 
 추가 곡은 원본 페이지의 이용 조건을 확인한 뒤 `music.mjs` 카탈로그에 등록하고 이 표와 사용 기록을 갱신한다. 파일이 없으면 카탈로그에서 제외된다.
 
+
+## 추가 적용 기록: 고양가을꽃축제
+
+- 파일: `local-data/deliverables/goyang-festival-auto.mp4`
+- 브금: salsa / Happy Latin Salsa Dance / kornevmusic / Pixabay Content License.
+- 20.27초, 음량 16%, 시작·끝 페이드. 컷 전환 효과음 3곳, 무료 Heami 내레이션과 혼합.
+- 기사/사진: 경기도뉴스포털, 안주형 기자, 공공누리 제1유형. 상세 원문/사진 링크는 `local-data/deliverables/goyang-festival-auto-credits.md`.

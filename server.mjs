@@ -3,10 +3,10 @@ import {readFile} from 'node:fs/promises';
 import {renderVideo} from './render.mjs';
 import {findPhotos} from './photos.mjs';
 import {XMLParser} from 'fast-xml-parser';
-import {searchArticles,getArticle,downloadPhoto} from './articles.mjs';
+import {searchArticles,searchGyeonggiArticles,getArticle,downloadPhoto} from './articles.mjs';
 import {planArticle} from './ai.mjs';
 import {musicCatalog,musicWav} from './music.mjs';
-import {searchFestivals} from './festivals.mjs';
+import {searchFestivals,festivalResources} from './festivals.mjs';
 try { process.loadEnvFile(); } catch {}
 const port=Number(process.env.PORT||4310);
 const json=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
@@ -16,7 +16,7 @@ http.createServer(async(req,res)=>{try{
  const url=new URL(req.url,'http://localhost');
  if(req.method==='POST' && req.headers.origin && req.headers.origin!==`http://localhost:${port}` && req.headers.origin!==`http://127.0.0.1:${port}`)return json(res,403,{error:'허용되지 않은 요청'});
  if(url.pathname==='/api/status')return json(res,200,{aiReady:!!(process.env.NVIDIA_API_KEY||process.env.GEMINI_API_KEY)&&process.env.AI_FREE_TIER_CONFIRMED==='true',tourReady:!!process.env.TOUR_API_KEY});
- if(req.method==='GET'&&url.pathname==='/api/articles')return json(res,200,await searchArticles((url.searchParams.get('q')||'축제').slice(0,80)));
+ if(req.method==='GET'&&url.pathname==='/api/articles')return json(res,200,await (url.searchParams.get('provider')==='gyeonggi'?searchGyeonggiArticles:searchArticles)((url.searchParams.get('q')||'축제').slice(0,80)));
  if(req.method==='POST'&&url.pathname==='/api/prepare'){
   const input=await body(req),article=await getArticle(input.url),plan=await planArticle(article);
   const photos=await Promise.all(article.photos.map(downloadPhoto));
@@ -26,6 +26,7 @@ http.createServer(async(req,res)=>{try{
  if(req.method==='GET'&&url.pathname.startsWith('/api/music/')){const track=musicCatalog.find(t=>t.id===url.pathname.split('/').pop());if(track?.preview){const bytes=await readFile(track.preview);res.writeHead(200,{'Content-Type':'audio/mpeg','Content-Length':bytes.length});res.end(bytes);return;}}
  if(req.method==='GET'&&url.pathname==='/api/music/light'){const wav=musicWav(16,{music:'light',volume:.5});res.writeHead(200,{'Content-Type':'audio/wav','Content-Length':wav.length});res.end(wav);return;}
  if(req.method==='GET'&&url.pathname==='/api/festivals')return json(res,200,await searchFestivals(url.searchParams.get('start')||'',url.searchParams.get('end')||''));
+ if(req.method==='GET'&&url.pathname==='/api/festival-resources')return json(res,200,await festivalResources(url.searchParams.get('contentId')||''));
  if(url.pathname==='/api/photos')return json(res,200,await findPhotos((url.searchParams.get('q')||'강남').slice(0,80)));
  if(url.pathname==='/api/news'){
  const q=(url.searchParams.get('q')||'강남 축제').slice(0,80);
