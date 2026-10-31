@@ -3,6 +3,10 @@ import {readFile} from 'node:fs/promises';
 import {renderVideo} from './render.mjs';
 import {findPhotos} from './photos.mjs';
 import {XMLParser} from 'fast-xml-parser';
+import {searchArticles,getArticle,downloadPhoto} from './articles.mjs';
+import {planArticle} from './ai.mjs';
+import {musicCatalog,musicWav} from './music.mjs';
+import {searchFestivals} from './festivals.mjs';
 try { process.loadEnvFile(); } catch {}
 const port=Number(process.env.PORT||4310);
 const json=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
@@ -11,7 +15,17 @@ const clean=s=>String(s||'').replace(/<[^>]*>/g,'').slice(0,2000);
 http.createServer(async(req,res)=>{try{
  const url=new URL(req.url,'http://localhost');
  if(req.method==='POST' && req.headers.origin && req.headers.origin!==`http://localhost:${port}` && req.headers.origin!==`http://127.0.0.1:${port}`)return json(res,403,{error:'허용되지 않은 요청'});
- if(url.pathname==='/api/status')return json(res,200,{aiReady:!!(process.env.NVIDIA_API_KEY||process.env.GEMINI_API_KEY)&&process.env.AI_FREE_TIER_CONFIRMED==='true'});
+ if(url.pathname==='/api/status')return json(res,200,{aiReady:!!(process.env.NVIDIA_API_KEY||process.env.GEMINI_API_KEY)&&process.env.AI_FREE_TIER_CONFIRMED==='true',tourReady:!!process.env.TOUR_API_KEY});
+ if(req.method==='GET'&&url.pathname==='/api/articles')return json(res,200,await searchArticles((url.searchParams.get('q')||'축제').slice(0,80)));
+ if(req.method==='POST'&&url.pathname==='/api/prepare'){
+  const input=await body(req),article=await getArticle(input.url),plan=await planArticle(article);
+  const photos=await Promise.all(article.photos.map(downloadPhoto));
+  return json(res,200,{article:{title:article.title,text:article.text,url:article.url,source:article.source,license:article.license},headline:plan.headline,scenes:plan.scenes,photos,warnings:['기사의 행사 연도, 인물, 사진과 대본의 일치를 확인하세요. AI 매칭은 사진 설명을 기준으로 합니다.']});
+ }
+ if(req.method==='GET'&&url.pathname==='/api/music')return json(res,200,{tracks:musicCatalog.map(({file,preview,...rest})=>rest),defaultId:musicCatalog[0].id});
+ if(req.method==='GET'&&url.pathname.startsWith('/api/music/')){const track=musicCatalog.find(t=>t.id===url.pathname.split('/').pop());if(track?.preview){const bytes=await readFile(track.preview);res.writeHead(200,{'Content-Type':'audio/mpeg','Content-Length':bytes.length});res.end(bytes);return;}}
+ if(req.method==='GET'&&url.pathname==='/api/music/light'){const wav=musicWav(16,{music:'light',volume:.5});res.writeHead(200,{'Content-Type':'audio/wav','Content-Length':wav.length});res.end(wav);return;}
+ if(req.method==='GET'&&url.pathname==='/api/festivals')return json(res,200,await searchFestivals(url.searchParams.get('start')||'',url.searchParams.get('end')||''));
  if(url.pathname==='/api/photos')return json(res,200,await findPhotos((url.searchParams.get('q')||'강남').slice(0,80)));
  if(url.pathname==='/api/news'){
  const q=(url.searchParams.get('q')||'강남 축제').slice(0,80);
@@ -34,10 +48,11 @@ http.createServer(async(req,res)=>{try{
  return json(res,200,{scenes:result.scenes,warnings:['AI 초안의 날짜, 수치, 평가 표현을 원문과 대조하세요. 제목만으로 생성하면 세부 정보가 부족합니다.'],mode:'ai'});
  }
  if(req.method==='POST'&&url.pathname==='/api/render'){
- const {frames,texts,voice=false}=await body(req);
+ const {frames,texts,voice=false,audio={music:'none',volume:.16,sfx:false}}=await body(req);
  if(!Array.isArray(frames)||frames.length!==4||frames.some(f=>typeof f!=='string'||!f.startsWith('data:image/png;base64,')))return json(res,400,{error:'장면 이미지 4개가 필요합니다.'});
  if(voice&&(!Array.isArray(texts)||texts.length!==4||texts.some(t=>typeof t!=='string'||!t.trim()||t.length>100)))return json(res,400,{error:'음성 대본 4개를 확인하세요.'});
- const {video,duration}=await renderVideo(frames,texts,voice);
+ if(!musicCatalog.some(m=>m.id===audio?.music)||!Number.isFinite(audio.volume)||audio.volume<0||audio.volume>.5||typeof audio.sfx!=='boolean')return json(res,400,{error:'음향 설정을 확인하세요.'});
+ const {video,duration}=await renderVideo(frames,texts,voice,audio);
  res.writeHead(200,{'Content-Type':'video/mp4','Content-Disposition':'attachment; filename="local-short.mp4"','X-Video-Duration':duration.toFixed(1)});res.end(video);return;
  }
  const files={'/':'index.html','/app.js':'app.js','/style.css':'style.css'};
