@@ -1,3 +1,4 @@
+import {filterPromotionNews} from './news-filter.mjs';
 // TourAPI credentials remain on the server. Images need separate KOGL checks.
 import {XMLParser} from 'fast-xml-parser';
 import {getArticle,searchArticles,searchGyeonggiArticles} from './articles.mjs';
@@ -28,7 +29,8 @@ async function relatedNews(festival){
  if(!r.ok)throw Error('관련 뉴스 검색에 실패했습니다.');
  const data=new XMLParser({ignoreAttributes:false}).parse(await r.text());
  const entries=data.rss?.channel?.item||[];
- return (Array.isArray(entries)?entries:[entries]).map(x=>({title:String(x.title||'').replace(/<[^>]*>/g,''),url:x.link,source:x.source?.['#text']||'뉴스',date:new Date(x.pubDate).toISOString().slice(0,10)})).filter(x=>matchesFestival(x,festival)&&/^https:\/\/news\.google\.com\//.test(x.url)).slice(0,8);
+ const found=(Array.isArray(entries)?entries:[entries]).map(x=>({title:String(x.title||'').replace(/<[^>]*>/g,''),url:x.link,source:x.source?.['#text']||'뉴스',date:new Date(x.pubDate).toISOString().slice(0,10)})).filter(x=>matchesFestival(x,festival)&&/^https:\/\/news\.google\.com\//.test(x.url)).slice(0,16);
+ return (await filterPromotionNews(found,festival.title+' '+festival.address)).items.slice(0,8);
 }
 export async function festivalResources(contentId){
  if(!/^\d{1,12}$/.test(String(contentId)))throw Error('축제 ID를 확인하세요.');
@@ -37,7 +39,8 @@ export async function festivalResources(contentId){
  const festival={contentId,title:common[0].title,start:intro[0].eventstartdate,end:intro[0].eventenddate,address:common[0].addr1};
  const results=await Promise.allSettled([searchGyeonggiArticles(festival.title),festival.address?.includes('용인')?searchArticles(festival.title):Promise.resolve({items:[]}),relatedNews(festival)]);
  const warnings=results.flatMap((r,i)=>r.status==='rejected'?[`${['경기도 기사','용인 기사','관련 뉴스'][i]} 검색 실패: ${r.reason.message}`]:[]);
- const candidates=results.slice(0,2).flatMap(r=>r.status==='fulfilled'?r.value.items:[]).filter(x=>matchesFestival(x,festival)).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+ const matched=results.slice(0,2).flatMap(r=>r.status==='fulfilled'?r.value.items:[]).filter(x=>matchesFestival(x,festival)).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+ const candidates=(await filterPromotionNews(matched,festival.title+' '+festival.address)).items;
  const checked=await Promise.allSettled(candidates.map(async item=>{const article=await getArticle(item.url);return {...item,photoCount:article.photos.length,license:article.license};}));
  const articles=checked.flatMap(r=>r.status==='fulfilled'?[r.value]:[]);
  const excluded=checked.flatMap((r,i)=>r.status==='rejected'?[{title:candidates[i].title,reason:r.reason.message}]:[]);

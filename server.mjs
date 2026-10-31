@@ -1,3 +1,4 @@
+import {filterPromotionNews} from './news-filter.mjs';
 import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {renderVideo} from './render.mjs';
@@ -16,7 +17,7 @@ http.createServer(async(req,res)=>{try{
  const url=new URL(req.url,'http://localhost');
  if(req.method==='POST' && req.headers.origin && req.headers.origin!==`http://localhost:${port}` && req.headers.origin!==`http://127.0.0.1:${port}`)return json(res,403,{error:'허용되지 않은 요청'});
  if(url.pathname==='/api/status')return json(res,200,{aiReady:!!(process.env.NVIDIA_API_KEY||process.env.GEMINI_API_KEY)&&process.env.AI_FREE_TIER_CONFIRMED==='true',tourReady:!!process.env.TOUR_API_KEY});
- if(req.method==='GET'&&url.pathname==='/api/articles')return json(res,200,await (url.searchParams.get('provider')==='gyeonggi'?searchGyeonggiArticles:searchArticles)((url.searchParams.get('q')||'축제').slice(0,80)));
+ if(req.method==='GET'&&url.pathname==='/api/articles'){const q=(url.searchParams.get('q')||'축제').slice(0,80);const data=await (url.searchParams.get('provider')==='gyeonggi'?searchGyeonggiArticles:searchArticles)(q);return json(res,200,await filterPromotionNews(data.items,q));}
  if(req.method==='POST'&&url.pathname==='/api/prepare'){
   const input=await body(req),article=await getArticle(input.url),plan=await planArticle(article);
   const photos=await Promise.all(article.photos.map(downloadPhoto));
@@ -34,7 +35,8 @@ http.createServer(async(req,res)=>{try{
  if(!upstream.ok)throw Error('뉴스 수집 실패. 잠시 후 다시 시도하세요.');
  const feed=new XMLParser({ignoreAttributes:false}).parse(await upstream.text());
  const items=feed.rss?.channel?.item||[];
- return json(res,200,{items:(Array.isArray(items)?items:[items]).slice(0,12).map(x=>({title:clean(x.title),url:x.link,date:x.pubDate,source:clean(x.source?.['#text']||x.source),text:clean(x.title)}))});
+ const found=(Array.isArray(items)?items:[items]).slice(0,24).map(x=>({title:clean(x.title),url:x.link,date:x.pubDate,source:clean(x.source?.['#text']||x.source),text:clean(x.description||x.title)}));
+ const filtered=await filterPromotionNews(found,q);return json(res,200,{...filtered,items:filtered.items.slice(0,12)});
  }
  if(req.method==='POST'&&url.pathname==='/api/script'){
  if(!(process.env.NVIDIA_API_KEY||process.env.GEMINI_API_KEY)||process.env.AI_FREE_TIER_CONFIRMED!=='true')return json(res,409,{error:'무료 등급 확인과 NVIDIA_API_KEY 또는 GEMINI_API_KEY 설정이 필요합니다. 수동 대본으로 영상 출력은 가능합니다.'});
