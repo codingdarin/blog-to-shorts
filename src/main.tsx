@@ -23,7 +23,7 @@ function Section({step,title,description,children}:{step:string;title:string;des
 }
 function App(){
  const [url,setUrl]=useState(''),[text,setText]=useState(''),[title,setTitle]=useState(''),[source,setSource]=useState(''),[sourceUrl,setSourceUrl]=useState('');
- const [tone,setTone]=useState('education'),[count,setCount]=useState(5),[duration,setDuration]=useState(45),[speed,setSpeed]=useState(1);
+ const [tone,setTone]=useState('shorts'),[count,setCount]=useState(6),[duration,setDuration]=useState(45),[speed,setSpeed]=useState(1);
  const [photos,setPhotos]=useState<Photo[]>([]),[scenes,setScenes]=useState<Scene[]>([]),[headline,setHeadline]=useState('');
  const [motion,setMotion]=useState(true),[position,setPosition]=useState(0);
  const [active,setActive]=useState(0),[busy,setBusy]=useState(''),[notice,setNotice]=useState('블로그 글 주소를 불러오거나 본문을 직접 입력해 주세요.'),[warnings,setWarnings]=useState<string[]>([]);
