@@ -1,0 +1,51 @@
+[
+  {
+    "license": "Pixabay Content License",
+    "licenseUrl": "https://pixabay.com/service/license-summary/",
+    "contentId": null,
+    "id": "salsa-new-york",
+    "name": "Salsa Estilo New York 03",
+    "credit": "vjgalaxy (Alejandro Piñero Amerio)",
+    "pageUrl": "https://pixabay.com/music/latin-salsa-estilo-new-york-03-522534/",
+    "aiGenerated": true,
+    "file": "local-data/music/salsa-new-york.mp3",
+    "preview": "local-data/music/salsa-new-york-preview.mp3",
+    "url": "/api/music/salsa-new-york"
+  },
+  {
+    "license": "Pixabay Content License",
+    "licenseUrl": "https://pixabay.com/service/license-summary/",
+    "contentId": true,
+    "id": "salsa",
+    "name": "Happy Latin Salsa Dance",
+    "credit": "kornevmusic",
+    "pageUrl": "https://pixabay.com/music/salsa-happy-latin-salsa-dance-621026/",
+    "file": "local-data/music/salsa.mp3",
+    "preview": "local-data/music/salsa-preview.mp3",
+    "url": "/api/music/salsa"
+  },
+  {
+    "license": "Pixabay Content License",
+    "licenseUrl": "https://pixabay.com/service/license-summary/",
+    "contentId": true,
+    "id": "lunar",
+    "name": "Chinese Lunar New Year",
+    "credit": "ViacheslavStarostin",
+    "pageUrl": "https://pixabay.com/music/china-chinese-lunar-new-year-465871/",
+    "file": "local-data/music/lunar.mp3",
+    "preview": "local-data/music/lunar-preview.mp3",
+    "url": "/api/music/lunar"
+  },
+  {
+    "license": "Pixabay Content License",
+    "licenseUrl": "https://pixabay.com/service/license-summary/",
+    "contentId": true,
+    "id": "swing",
+    "name": "Bring Back the Swing (Upbeat Jazz)",
+    "credit": "EvolvingVibes",
+    "pageUrl": "https://pixabay.com/music/traditional-jazz-bring-back-the-swing-upbeat-jazz-617230/",
+    "file": "local-data/music/swing.mp3",
+    "preview": "local-data/music/swing-preview.mp3",
+    "url": "/api/music/swing"
+  }
+]

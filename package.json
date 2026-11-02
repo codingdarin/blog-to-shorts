@@ -2,11 +2,12 @@
   "name": "blog-to-shorts",
   "version": "1.0.0",
   "description": "Blog content and images to 30–60 second vertical shorts",
-  "main": "index.js",
   "scripts": {
-    "start": "node server.mjs",
-    "check": "node --check server.mjs && node --check blog.mjs && node --check ai.mjs && node --check render.mjs && node --check timing.mjs && node --check src/workflow.js && tsc --noEmit",
-    "test": "node --test tests/*.test.mjs",
+    "start": "node scripts/python.mjs -m backend",
+    "check": "tsc --noEmit && node scripts/python.mjs -m compileall -q backend",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "node --test tests/*.test.mjs",
+    "test:backend": "node scripts/python.mjs -m pytest -q",
     "build": "vite build",
     "prestart": "npm run build"
   },
@@ -14,11 +15,8 @@
   "author": "",
   "type": "module",
   "dependencies": {
-    "cheerio": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "fast-xml-parser": "^5.11.2",
-    "ffmpeg-static": "^5.3.0",
     "lucide-react": "^1.65.0",
     "radix-ui": "^1.8.1",
     "react": "^19.3.1",
@@ -27,6 +25,7 @@
   },
   "private": true,
   "devDependencies": {
+    "ffmpeg-static": "^5.3.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",

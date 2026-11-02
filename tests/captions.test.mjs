@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {captionPages,captionAt,captionTiming,validateCaptionLayers,narrationFromCaptions,editableCaptionPages,captionEditorIssue,captionPosition} from '../src/captions.js';
-import {srtSubtitles} from '../timing.mjs';
 const measure=text=>Array.from(text).reduce((sum,c)=>sum+(c===' '?8:34),0);
 const compact=text=>text.replace(/\s/g,'');
 const text='건설기계기술사 독학을 어디서부터 시작할지 고민되시나요? 시험 범위가 넓고 서술형 답안을 써야 해 막막할 수 있어요.';
@@ -20,9 +19,6 @@ test('subtitle cues follow speech length and keep the final caption through the 
  assert.equal(cues[0].start,0);assert.equal(cues.at(-1).end,12);
  cues.forEach((c,i)=>{assert.ok(c.end>c.start);if(i)assert.equal(c.start,cues[i-1].end);if(i<cues.length-1)assert.ok(c.end<8);});
  assert.equal(captionAt(pages,0),pages[0]);assert.equal(captionAt(pages,1),pages.at(-1));
- const srt=srtSubtitles(cues.map(c=>c.text),cues.map(c=>c.end-c.start));
- assert.match(srt,/00:00:12,000/);
- assert.equal(srt.trim().split('\n\n').length,pages.length);
 });
 test('rejects missing words, extra words, malformed images and three-line captions',()=>{
  const pages=captionPages(text,measure).map(p=>({...p,dataUrl:'data:image/png;base64,AQID'}));
@@ -32,16 +28,16 @@ test('rejects missing words, extra words, malformed images and three-line captio
 });
 
 
-test('edited caption boundaries and line breaks survive narration, timing and SRT',()=>{
+test('edited caption boundaries and line breaks survive narration and timing',()=>{
  const captions=['이 강의를 추천해요.\n다들 확인해 보세요.','모두 좋은 수업 들으세요.\n그럼 이만이에요.'];
  const pages=editableCaptionPages(captions),narration=narrationFromCaptions(captions);
  assert.equal(narration,'이 강의를 추천해요. 다들 확인해 보세요. 모두 좋은 수업 들으세요. 그럼 이만이에요.');
  assert.deepEqual(pages.map(p=>p.lines.join('\n')),captions);
  assert.equal(captionEditorIssue(captions),'');
  assert.doesNotThrow(()=>validateCaptionLayers([pages.map(p=>({...p,dataUrl:'data:image/png;base64,AQID'}))],[narration]));
- const cues=captionTiming(pages,10,8),srt=srtSubtitles(cues.map(c=>c.text),cues.map(c=>c.end-c.start));
+ const cues=captionTiming(pages,10,8);
  for(const [i,caption] of captions.entries()){
-  assert.ok(srt.includes(caption));assert.equal(captionAt(pages,captionPosition(captions,i)),pages[i]);
+  assert.equal(cues[i].text,caption);assert.equal(captionAt(pages,captionPosition(captions,i)),pages[i]);
  }
  assert.deepEqual(editableCaptionPages(['긴 문장을 한 줄로 직접 지정해요.'])[0].lines,['긴 문장을 한 줄로 직접 지정해요.']);
 });

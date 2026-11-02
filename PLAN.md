@@ -199,3 +199,17 @@
 - App 초기 상태의 톤을 education→shorts, 장면 수를 5→6으로 변경했다. 길이는 기존 45초를 유지한다. 사용자가 선택값을 변경하는 기능은 유지한다.
 - 기본값 코드 확인, 구문·TypeScript 검사 및 최종 프로덕션 빌드 통과. 단순 초기값 변경으로 별도 테스트 추가·AI 생성·영상 합성·브라우저 조작은 하지 않았다. 기존 열린 화면의 선택값은 변경하지 않았다.
 
+## Python 백엔드 전환 — 2026-11-02 KST
+
+- 사용자 확정: 현재 상태를 먼저 커밋·푸시한 뒤 Node HTTP/fetch/Cheerio/FFmpeg 실행/NDJSON을 FastAPI + Uvicorn/httpx/BeautifulSoup/Python subprocess/StreamingResponse로 전환한다. 프런트와 기존 기능은 유지한다.
+- 전환 전 작업 트리는 깨끗했고 체크포인트 2a31c99가 원격 codex/naver-education-shorts에 반영되어 있음을 git push로 확인했다. 원본 local-shorts는 수정하지 않는다.
+- backend 패키지에 크롤러, 동일한 AI 프롬프트·퓨샷, ElevenLabs, 타이밍/SRT, FFmpeg 합성, HTTP/NDJSON을 이식했다. API 키는 서버 .env에서만 읽는다. Windows 기본 음성의 voice.ps1은 OS 음성 호출 도구로 유지한다.
+- Python 3.12 가상환경과 requirements 잠금 파일을 준비했다. 기존 FFmpeg 바이너리는 무시되는 local-data/bin에 복사해 전환 전후 동일한 영상 엔진으로 비교한다. 실제 배포에서는 시스템 FFmpeg 또는 FFMPEG_PATH를 사용한다.
+- Node 기준 결과와 Python의 18가지 장면 시간/SRT, 파일명, 자막 큐, 자동 배속, 효과음 PCM 바이트, 4가지 사진 움직임의 실제 FFmpeg 프레임 해시가 일치했다. 첫 Python 테스트 68개 통과. 외부 AI/ElevenLabs 테스트는 모의 응답이며 실제 생성 검증은 별도로 진행한다.
+- 진행 중: HTTP/스트리밍·취소·다운로드 테스트, Node 서버 제거와 실행 문서 정리, 실제 네이버/AI/Windows TTS/MP4 종단 검증, 커밋·푸시.
+- 구현 참고: https://fastapi.tiangolo.com/advanced/custom-response/ (StreamingResponse), https://www.python-httpx.org/async/ (AsyncClient 재사용과 비동기 스트림).
+- 완료 검증: 프런트 19개 + Python 73개 테스트, TypeScript/Python 구문, 프로덕션 빌드 통과. FastAPI HTTP/NDJSON 완료·오류·중복 요청·연결 취소·하위 프로세스 종료·다운로드 캐시/만료 검증 포함.
+- 실제 수집: 첫 URL 1,489자/7이미지, 둘째 URL 1,479자/7이미지 정상. 실제 NVIDIA + 이미지 입력으로 쇼츠/6장면/45초 초안 생성 완료. 실제 ElevenLabs 조회 21음성·크레딧 정상(이번 전환 검증에서 ElevenLabs 합성 호출 없음).
+- 실제 Windows TTS·Salsa·사진 움직임·수동 제목/자막 줄바꿈으로 59.233초, 1080×1920 MP4 57,751,336바이트 완성. 길이 초과를 1→1.1배 자동 조정하여 해결했다. 브라우저 영상 readyState 4/error 없음, NDJSON 100% 완료, 모든 프레임 디코딩 통과. 다운로드한 SRT 15페이지가 편집창 문구·줄바꿈과 정확히 일치했다.
+- 증빙: local-data/python-backend-verified.mp4, python-backend-verified.srt, python-backend-frame.png, python-backend-verified-ui.png. API filename은 261102_건설기계기술사 독학 어디서부터 시작할까요.mp4. 파일과 키는 Git 제외.
+- 현재 4311은 Python/Uvicorn 서버이며 원본 프로젝트는 변경하지 않았다. 별도 검증 탭에 완성 결과를 유지했다. 외부 배포는 하지 않았다.
