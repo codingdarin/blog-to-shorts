@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {captionPages,captionAt,captionTiming,validateCaptionLayers} from '../src/captions.js';
+import {captionPages,captionAt,captionTiming,validateCaptionLayers,narrationFromCaptions,editableCaptionPages,captionEditorIssue,captionPosition} from '../src/captions.js';
 import {srtSubtitles} from '../timing.mjs';
 const measure=text=>Array.from(text).reduce((sum,c)=>sum+(c===' '?8:34),0);
 const compact=text=>text.replace(/\s/g,'');
@@ -29,4 +29,26 @@ test('rejects missing words, extra words, malformed images and three-line captio
  assert.doesNotThrow(()=>validateCaptionLayers([pages],[text]));
  for(const changed of [pages.slice(1),pages.map((p,i)=>i? p:{...p,lines:['하나','둘','셋']}),pages.map(p=>({...p,dataUrl:'https://example.com/image.png'}))])assert.throws(()=>validateCaptionLayers([changed],[text]));
  assert.throws(()=>validateCaptionLayers([pages],[text+' 추가예요.']));
+});
+
+
+test('edited caption boundaries and line breaks survive narration, timing and SRT',()=>{
+ const captions=['이 강의를 추천해요.\n다들 확인해 보세요.','모두 좋은 수업 들으세요.\n그럼 이만이에요.'];
+ const pages=editableCaptionPages(captions),narration=narrationFromCaptions(captions);
+ assert.equal(narration,'이 강의를 추천해요. 다들 확인해 보세요. 모두 좋은 수업 들으세요. 그럼 이만이에요.');
+ assert.deepEqual(pages.map(p=>p.lines.join('\n')),captions);
+ assert.equal(captionEditorIssue(captions),'');
+ assert.doesNotThrow(()=>validateCaptionLayers([pages.map(p=>({...p,dataUrl:'data:image/png;base64,AQID'}))],[narration]));
+ const cues=captionTiming(pages,10,8),srt=srtSubtitles(cues.map(c=>c.text),cues.map(c=>c.end-c.start));
+ for(const [i,caption] of captions.entries()){
+  assert.ok(srt.includes(caption));assert.equal(captionAt(pages,captionPosition(captions,i)),pages[i]);
+ }
+ assert.deepEqual(editableCaptionPages(['긴 문장을 한 줄로 직접 지정해요.'])[0].lines,['긴 문장을 한 줄로 직접 지정해요.']);
+});
+
+test('unfinished caption edits block rendering without discarding the user text',()=>{
+ for(const captions of [[],[''],['완성해요.',''],['하나\n둘\n셋'],['첫 줄이에요.\n'],['가'.repeat(161)]])assert.ok(captionEditorIssue(captions));
+ assert.equal(captionEditorIssue(['하나예요.\r\n둘이에요.']),'');
+ assert.equal(narrationFromCaptions(['첫 자막이에요.','새 자막이에요.']),'첫 자막이에요. 새 자막이에요.');
+ assert.equal(narrationFromCaptions(['첫 자막이에요.']),'첫 자막이에요.');
 });

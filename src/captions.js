@@ -43,3 +43,20 @@ export function validateCaptionLayers(layers,texts){
   if(compact(pages.map(p=>p.text).join(''))!==compact(texts[i]))throw Error('자막 문구와 내레이션이 일치하지 않아요.');
  });
 }
+
+// Editor pages are the source of truth for both narration and displayed line breaks.
+export const narrationFromCaptions=captions=>captions.map(text=>text.trim().replace(/\s+/g,' ')).filter(Boolean).join(' ');
+export function editableCaptionPages(captions){
+ return captions.map(value=>({text:value.trim().replace(/\s+/g,' '),lines:value.split(/\r?\n/).map(line=>line.trim())}));
+}
+export function captionEditorIssue(captions){
+ if(!captions.length||captions.some(text=>!text.trim()))return '빈 자막을 입력하거나 삭제해 주세요.';
+ if(captions.some(text=>text.split(/\r?\n/).length>2))return '한 자막은 두 줄까지예요. 자막을 추가해서 나눠 주세요.';
+ if(captions.some(text=>text.split(/\r?\n/).some(line=>!line.trim())))return '빈 줄을 지우거나 문구를 입력해 주세요.';
+ if(narrationFromCaptions(captions).length>160)return '장면 전체 자막을 합쳐 160자 이하로 줄여 주세요.';
+ return '';
+}
+export function captionPosition(captions,index){
+ const weights=captions.map(captionWeight),total=weights.reduce((sum,w)=>sum+w,0);
+ return (weights.slice(0,index).reduce((sum,w)=>sum+w,0)+weights[index]/2)/total;
+}

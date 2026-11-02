@@ -1,6 +1,6 @@
 import {titleLines} from './text-layout.js';
 import {PHOTO_BOX,photoMotion} from './photo-motion.js';
-import {CAPTION_BOX,CAPTION_FONT_SIZE,captionPages,captionAt} from './captions.js';
+import {CAPTION_BOX,CAPTION_FONT_SIZE,captionPages,captionAt,editableCaptionPages,captionEditorIssue} from './captions.js';
 
 export async function api(url,body){
  const response=await fetch(url,body===undefined?undefined:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -26,20 +26,25 @@ export function photoLayer(photo){
  ctx.drawImage(photo.image,(surface.width-w)/2,(surface.height-h)/2,w,h);
  return surface.toDataURL('image/png');
 }
-function pagesFor(ctx,text){
+function pagesFor(ctx,scene){
  ctx.font=`bold ${CAPTION_FONT_SIZE}px "Malgun Gothic",sans-serif`;
- return captionPages(text,t=>ctx.measureText(t).width);
+ return scene.captions?editableCaptionPages(scene.captions):captionPages(scene.text,t=>ctx.measureText(t).width);
 }
 function paintCaption(ctx,page,y){
  ctx.fillStyle='#fff';ctx.textAlign='center';
  let size=CAPTION_FONT_SIZE;
  do{ctx.font=`bold ${size}px "Malgun Gothic",sans-serif`;if(page.lines.every(line=>ctx.measureText(line).width<=636)||size<=2)break;size-=2;}while(true);
- page.lines.forEach((line,i)=>ctx.fillText(line,360,y+i*(size+10)));
+ page.lines.slice(0,2).forEach((line,i)=>ctx.fillText(line,360,y+i*(size+10)));
+}
+export function initialCaptions(text){
+ const ctx=document.createElement('canvas').getContext('2d');
+ return pagesFor(ctx,{text}).map(page=>page.lines.join('\n'));
 }
 export function captionLayers(scene){
+ const issue=scene.captions&&captionEditorIssue(scene.captions);if(issue)throw Error(issue);
  const canvas=document.createElement('canvas');canvas.width=CAPTION_BOX.width;canvas.height=CAPTION_BOX.height;
  const ctx=canvas.getContext('2d');
- return pagesFor(ctx,scene.text).map(page=>{ctx.clearRect(0,0,canvas.width,canvas.height);paintCaption(ctx,page,33);return {...page,dataUrl:canvas.toDataURL('image/png')};});
+ return pagesFor(ctx,scene).map(page=>{ctx.clearRect(0,0,canvas.width,canvas.height);paintCaption(ctx,page,33);return {...page,dataUrl:canvas.toDataURL('image/png')};});
 }
 export function drawFrame(canvas,{headline,scene,photos,source,index=0,count=5,hidePhoto=false,hideCaption=false,captionProgress=0,motionProgress=/** @type {number|undefined} */(undefined)}){
  const ctx=canvas.getContext('2d');ctx.fillStyle='#000000';ctx.fillRect(0,0,720,1280);ctx.textAlign='center';
@@ -63,7 +68,7 @@ export function drawFrame(canvas,{headline,scene,photos,source,index=0,count=5,h
   ctx.fillStyle='#93c5fd';ctx.font='bold 34px "Malgun Gothic",sans-serif';ctx.fillText(scene?.role==='hook'?'함께 알아볼까요?':scene?.role==='cta'?'핵심을 기억해 보세요':'오늘의 핵심',360,580);
   ctx.fillStyle='#cbd5e1';ctx.font='24px "Malgun Gothic",sans-serif';ctx.fillText('본문 이미지 또는 내 사진을 선택하세요',360,630);
  }
- if(!hideCaption){const page=captionAt(pagesFor(ctx,scene?.text||'본문을 입력하고 대본을 만들어 보세요.'),captionProgress);if(page)paintCaption(ctx,page,CAPTION_BOX.y+33);}
+ if(!hideCaption){const page=captionAt(pagesFor(ctx,scene||{text:'본문을 입력하고 대본을 만들어 보세요.'}),captionProgress);if(page)paintCaption(ctx,page,CAPTION_BOX.y+33);}
  ctx.font='18px "Malgun Gothic",sans-serif';ctx.fillStyle='#94a3b8';
  ctx.fillText(String(source||'직접 입력한 콘텐츠').slice(0,42),360,1218);
  if(photo)ctx.fillText(`이미지: ${String(photo.artist||'직접 업로드').slice(0,32)}`,360,1245);
