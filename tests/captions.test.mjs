@@ -74,3 +74,23 @@ test('complete short sentences remain intact and manual edits are never resegmen
  assert.deepEqual(editableCaptionPages(manual).map(p=>p.lines.join('\n')),manual);
  assert.deepEqual(captionPages('',measure),[]);
 });
+
+
+test('fitting object phrases take priority over equal line lengths',()=>{
+ const content='설계와 유지관리 지식을 체계적으로 정리해 보세요.';
+ assert.deepEqual(captionPages(content,measure)[0].lines,['설계와 유지관리 지식을','체계적으로 정리해 보세요.']);
+ const full='먼저 건설기계의 구조와 작동 원리, '+content;
+ assert.ok(captionPages(full,measure).some(page=>page.lines[0]==='설계와 유지관리 지식을'));
+});
+
+test('semantic grouping yields to the actual width limit, even by one pixel',()=>{
+ const content='설계와 유지관리 지식을 정리해요.',phrase='설계와 유지관리 지식을',exactWidth=measure(phrase);
+ assert.deepEqual(captionPages(content,measure,exactWidth)[0].lines,[phrase,'정리해요.']);
+ const narrow=captionPages(content,measure,exactWidth-1);
+ assert.deepEqual(narrow[0].lines,['설계와 유지관리','지식을 정리해요.']);
+ for(const width of [exactWidth-1,200,636]){
+  const pages=captionPages(content,measure,width);
+  assert.ok(pages.every(page=>page.lines.length<=2&&page.lines.every(line=>measure(line)<=width)));
+  assert.deepEqual(pages.flatMap(p=>p.lines.join(' ').split(' ')),content.split(' '));
+ }
+});

@@ -5,11 +5,19 @@ const sentenceEnd=word=>/[.!?。！？]["'”’)]*$/.test(word);
 function boundaryCost(before,after){
  if(sentenceEnd(before))return 0;
  if(/^(수|뒤|때|것|것이|것을|있어요|있죠|없어요|보세요|해요|돼요|드려요)[.!?,]?$/.test(after))return 65;
- if(/(하는|되는|있는|없는|위한|대한|통한|익힌|확인한|작성한|배운)$/.test(before))return 55;
+ if(/(하는|되는|있는|없는|위한|대한|통한|같은|익힌|확인한|작성한|배운)$/.test(before))return 55;
  if(/^(주요|핵심|최신|다양한|필요한|중요한|이런|그런|모든)$/.test(before)||/(의|과|와|을|를)$/.test(before))return 45;
  if(/(은|는|이|가)$/.test(before))return -14;
  if(/[,，:：]$/.test(before)||/(하면|하지만|다면|으며|면서|하고|고)$/.test(before))return -6;
  return 12;
+}
+function lineBoundaryCost(before,after){
+ const boundary=boundaryCost(before,after);
+ // Keep dependent phrases together, but a completed object is a good line ending.
+ if(boundary>=55)return 2;
+ if(/(은|는|이|가|을|를)[,，]?$/.test(before)||/[,，:：]$/.test(before))return 0;
+ if(boundary>=45||/(적으로|함께|직접|다시|먼저)$/.test(before))return 2;
+ return 1;
 }
 function captionLines(words,measure,width){
  const text=words.join(' ');
@@ -18,8 +26,9 @@ function captionLines(words,measure,width){
  for(let cut=1;cut<words.length;cut++){
   const rows=[words.slice(0,cut).join(' '),words.slice(cut).join(' ')],sizes=rows.map(measure);
   if(sizes.some(size=>size>width))continue;
-  const cost=((sizes[0]-sizes[1])/width)**2*20+Math.max(0,boundaryCost(words[cut-1],words[cut]))*.12;
-  if(!best||cost<best.cost)best={cost,rows};
+  const boundary=lineBoundaryCost(words[cut-1],words[cut]),balance=Math.abs(sizes[0]-sizes[1]);
+  // Width is a hard limit. Meaning wins among fitting candidates; balance breaks ties.
+  if(!best||boundary<best.boundary||(boundary===best.boundary&&balance<best.balance))best={boundary,balance,rows};
  }
  return best?.rows;
 }
