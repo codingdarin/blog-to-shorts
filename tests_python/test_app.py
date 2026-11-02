@@ -21,12 +21,15 @@ async def client():
 
 async def test_routes_and_request_guards(client):
     assert (await client.get('/health')).json()=={'ok':True}
-    assert set((await client.get('/api/status')).json())=={'localTtsReady','aiReady'}
+    assert set((await client.get('/api/status')).json())=={'localTtsReady','aiReady','aiProviders'}
     music=(await client.get('/api/music')).json()
     assert all('file' not in track and 'preview' not in track for track in music['tracks'])
     for path in ['/.env','/backend/config.py','/local-data/blog-1.json','/../.env']:
         assert (await client.get(path)).status_code==404
     assert (await client.post('/api/script',json=INPUT,headers={'Origin':'https://evil.example'})).status_code==403
+    assert (await client.get('/api/status',headers={'Host':'evil.example'})).status_code==403
+    assert (await client.post('/api/script',json=INPUT,headers={'sec-fetch-site':'cross-site'})).status_code==403
+    assert (await client.get('/api/status')).headers['cache-control']=='no-store'
     for data in [b'{bad',b'[]',b'"hello"',b'x'*24_000_001]:
         r=await client.post('/api/script',content=data)
         assert r.status_code==400 and 'error' in r.json()
@@ -36,7 +39,7 @@ async def test_routes_and_request_guards(client):
 
 
 async def test_stream_progress_complete_error_and_release(client,monkeypatch):
-    monkeypatch.setattr(api,'ai_ready',lambda:True)
+    monkeypatch.setattr(api,'ai_connection',lambda options:('nvidia','test-key','model'))
     async def plan(data,client,progress):
         progress(10,'분석 중이에요.')
         progress(98,'완료했어요.')
@@ -63,7 +66,7 @@ async def test_stream_progress_complete_error_and_release(client,monkeypatch):
 
 
 async def test_concurrency_and_cancellation_release(client,monkeypatch):
-    monkeypatch.setattr(api,'ai_ready',lambda:True)
+    monkeypatch.setattr(api,'ai_connection',lambda options:('nvidia','test-key','model'))
     started,cancelled=asyncio.Event(),asyncio.Event()
     async def pending(data,client,progress):
         started.set()

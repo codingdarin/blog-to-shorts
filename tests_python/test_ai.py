@@ -81,19 +81,23 @@ async def test_text_only_and_role_normalization():
     assert [s['role'] for s in result['scenes']]==['hook','body','body','body','body','cta']
 
 
-@pytest.mark.parametrize('provider',['nvidia','gemini'])
+@pytest.mark.parametrize('provider',['nvidia','openai'])
 async def test_provider_payload_and_no_retry(monkeypatch,provider):
     monkeypatch.setenv('AI_FREE_TIER_CONFIRMED','true')
     monkeypatch.delenv('NVIDIA_API_KEY',raising=False)
-    monkeypatch.delenv('GEMINI_API_KEY',raising=False)
-    monkeypatch.setenv('NVIDIA_API_KEY' if provider=='nvidia' else 'GEMINI_API_KEY','test-key')
+    monkeypatch.delenv('OPENAI_API_KEY',raising=False)
+    monkeypatch.setenv('OPENAI_CREDITS_CONFIRMED','true')
+    monkeypatch.setenv('NVIDIA_API_KEY' if provider=='nvidia' else 'OPENAI_API_KEY','test-key')
     def handler(request):
         payload=json.loads(request.content)
         if provider=='nvidia':
             assert payload['messages'][1]['content'][2]['image_url']['url']==INPUT['photos'][0]['dataUrl']
             return httpx.Response(200,json={'choices':[{'message':{'content':'{}'}}]})
-        assert payload['contents'][0]['parts'][2]['inlineData']['data']=='AQID'
-        return httpx.Response(200,json={'candidates':[{'content':{'parts':[{'text':'{}'}]}}]})
+        assert str(request.url)=='https://api.openai.com/v1/responses'
+        assert request.headers['Authorization']=='Bearer test-key'
+        assert payload['input'][0]['content'][2]['image_url']==INPUT['photos'][0]['dataUrl']
+        assert payload['text']['format']['strict'] is True and payload['store'] is False
+        return httpx.Response(200,json={'status':'completed','output':[{'type':'message','content':[{'type':'output_text','text':'{}'}]}]})
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         assert await call_ai(client,'test',{},INPUT['photos'])=={}
 

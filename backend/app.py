@@ -4,6 +4,7 @@ import json
 import os
 import time
 import uuid
+from urllib.parse import urlsplit
 from collections import OrderedDict
 from contextlib import asynccontextmanager
 
@@ -11,9 +12,9 @@ import httpx
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response, FileResponse, StreamingResponse
 
-from .config import ROOT, ai_ready, port
+from .config import ROOT, ai_ready, ai_provider_status, port
 from .blog import get_blog
-from .ai import plan_blog, validate_plan_input, narration_style_issues
+from .ai import plan_blog, validate_plan_input, narration_style_issues, ai_connection
 from .elevenlabs import eleven_options
 from .music import music_catalog, default_music_id
 from .render import render_video
@@ -44,9 +45,17 @@ def error(message,status=400):
 @app.middleware('http')
 async def origin_guard(request,call_next):
     allowed={f'http://localhost:{port()}',f'http://127.0.0.1:{port()}',os.getenv('PUBLIC_ORIGIN')}
+    hosts={'localhost','127.0.0.1','::1',urlsplit(os.getenv('PUBLIC_ORIGIN','')).hostname}
+    if request.url.hostname not in hosts:
+        return error('허용되지 않은 호스트',403)
     if request.method=='POST' and request.headers.get('origin') and request.headers['origin'] not in allowed:
         return error('허용되지 않은 요청',403)
-    return await call_next(request)
+    if request.method=='POST' and request.headers.get('sec-fetch-site')=='cross-site':
+        return error('허용되지 않은 요청',403)
+    response=await call_next(request)
+    if request.url.path.startswith('/api/'):
+        response.headers['Cache-Control']='no-store'
+    return response
 
 
 @app.exception_handler(ValueError)
@@ -135,7 +144,7 @@ async def health():
 
 @app.get('/api/status')
 async def status():
-    return dict(localTtsReady=os.name=='nt',aiReady=ai_ready())
+    return dict(localTtsReady=os.name=='nt',aiReady=ai_ready(),aiProviders=ai_provider_status())
 
 
 @app.get('/api/voices')
@@ -159,8 +168,10 @@ async def blog(request:Request):
 async def script(request:Request):
     data=await read_body(request)
     validate_plan_input(data)
-    if not ai_ready():
-        return error('서버 .env에 무료 사용이 확인된 AI 키를 설정해 주세요. 수집과 수동 작성은 사용할 수 있어요.',409)
+    try:
+        ai_connection(data.get('ai'))
+    except ValueError as exc:
+        return error(str(exc),409)
     async def operation(progress):
         return {**await plan_blog(data,app.state.client,progress), 'mode':'ai'}
     return await task_response(request,'analysis',operation)

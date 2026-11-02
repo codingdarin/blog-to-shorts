@@ -22,7 +22,7 @@ Node.js는 프런트 빌드·테스트 도구입니다. HTTP 서버와 크롤링
 
 ## 설치와 실행
 
-Python 3.12 이상, Node.js 24 이상, FFmpeg가 필요합니다. 기본 무료 TTS는 Windows의 Microsoft Heami Desktop 음성을 사용합니다. 다른 OS에서는 ElevenLabs 또는 음성 끄기를 선택합니다.
+Python 3.12 이상, Node.js 24 이상, FFmpeg가 필요합니다. TTS 기본값은 ElevenLabs의 Roger입니다. 사용 가능한 Roger가 없으면 Windows 기본 음성을 선택하며 안내합니다. 무료 대안은 Windows의 Microsoft Heami Desktop 음성입니다. 다른 OS에서는 사용 가능한 ElevenLabs 음성 또는 음성 끄기를 선택합니다.
 
 Windows PowerShell:
 
@@ -71,13 +71,15 @@ FFmpeg는 `FFMPEG_PATH` → `local-data/bin/ffmpeg.exe`(Windows) 또는 `ffmpeg`
 
 ## API 환경
 
-- `NVIDIA_API_KEY` 또는 `GEMINI_API_KEY`: 대본과 이미지 분석. 둘 다 설정하면 NVIDIA를 사용합니다.
-- `NVIDIA_MODEL`, `GEMINI_MODEL`: 제공 환경의 이미지 입력·구조화 출력 지원 모델을 설정합니다.
-- `AI_FREE_TIER_CONFIRMED=true`: 무료 사용 범위를 확인한 후에만 설정합니다. 추가 결제·자동 충전은 수행하지 않습니다.
-- `ELEVENLABS_API_KEY`: 선택 사항. 음성과 잔여 크레딧을 확인하고 사용자가 선택한 경우에만 TTS를 요청합니다. 기본은 Windows 무료 음성입니다.
+- `OPENAI_API_KEY`, `NVIDIA_API_KEY`: 대본과 이미지 분석. 화면에서 사용할 제공자를 선택합니다. Gemini 지원은 제거했습니다.
+- `OPENAI_MODEL`(기본 `gpt-5.6-terra`), `NVIDIA_MODEL`: 이미지 입력·구조화 출력을 지원하는 모델 ID입니다. 제공받은 계정에서 허용된 모델로 화면에서 변경할 수 있습니다. OpenAI는 Responses API + JSON Schema를 사용하고 응답 저장은 `store=false`로 요청합니다.
+- `AI_FREE_TIER_CONFIRMED=true`: NVIDIA 무료 사용 범위를 확인한 후 설정합니다. `OPENAI_CREDITS_CONFIRMED=true`는 제공받은 OpenAI 크레딧/사용 한도를 확인한 뒤 설정합니다. 추가 결제·자동 충전은 수행하지 않습니다.
+- `ELEVENLABS_API_KEY`: 선택 사항. 음성과 잔여 크레딧을 확인하고 사용자가 선택한 경우에만 TTS를 요청합니다. 기본은 사용 가능한 Roger이며, Windows 무료 음성도 선택할 수 있습니다.
 - `PORT=4311`, `HOST=127.0.0.1`: 로컬 서버 주소입니다.
 - `FFMPEG_PATH`: 선택 사항. FFmpeg 실행 파일의 절대 경로 또는 저장소 기준 상대 경로입니다.
-- `PUBLIC_ORIGIN`: 별도 호스트의 프런트를 사용할 때 허용할 정확한 Origin입니다. 기본은 localhost/127.0.0.1의 서버 포트입니다.
+- `PUBLIC_ORIGIN`: 별도 호스트의 프런트를 사용할 때 허용할 정확한 Origin입니다. 기본은 localhost/127.0.0.1의 서버 포트입니다. 기본 로컬 앱에는 인증이 없으므로 개인 PC에서 사용합니다.
+
+화면의 API 키 입력은 해당 탭 메모리에서만 유지되고 요청마다 Python 서버를 거쳐 선택한 제공자에게 전달됩니다. 새로고침·제공자 변경·키 지우기 시 제거됩니다. 서버 환경변수의 키는 브라우저에 보내지 않습니다. 브라우저 localStorage에는 허용된 API·모델 선택만 저장하고 키·본문·출력·사용 확인은 저장하지 않습니다. 키를 계속 사용하려면 Git에서 제외된 서버 `.env`에 보관하세요. 브라우저 키 입력은 localhost 또는 HTTPS에서만 활성화합니다. 이는 공개 서비스용 사용자 인증·비밀 저장소를 대체하지 않습니다.
 
 AI 분석에는 768px 이하 JPEG로 변환한 이미지와 본문을 전달합니다. 이미지가 없으면 본문만 분석합니다. 키와 원문·이미지·음원·출력 영상·가상환경은 Git에 올리지 않습니다. API 키가 있는 실제 환경을 테스트용 모의 응답으로 간주하지 않습니다.
 

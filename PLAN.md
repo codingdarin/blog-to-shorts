@@ -213,3 +213,17 @@
 - 실제 Windows TTS·Salsa·사진 움직임·수동 제목/자막 줄바꿈으로 59.233초, 1080×1920 MP4 57,751,336바이트 완성. 길이 초과를 1→1.1배 자동 조정하여 해결했다. 브라우저 영상 readyState 4/error 없음, NDJSON 100% 완료, 모든 프레임 디코딩 통과. 다운로드한 SRT 15페이지가 편집창 문구·줄바꿈과 정확히 일치했다.
 - 증빙: local-data/python-backend-verified.mp4, python-backend-verified.srt, python-backend-frame.png, python-backend-verified-ui.png. API filename은 261102_건설기계기술사 독학 어디서부터 시작할까요.mp4. 파일과 키는 Git 제외.
 - 현재 4311은 Python/Uvicorn 서버이며 원본 프로젝트는 변경하지 않았다. 별도 검증 탭에 완성 결과를 유지했다. 외부 배포는 하지 않았다.
+
+## OpenAI 선택·키 입력·Roger 기본 음성 — 2026-11-02 KST
+
+- Python 전환 커밋 4e5279e를 기존 비공개 작업 브랜치에 푸시 완료한 뒤 후속 작업을 진행한다.
+- 사용자 확정: Gemini 대신 OpenAI GPT API를 선택할 수 있게 하고 프런트에서 API/키를 입력한다. TTS 기본은 Roger. 브라우저 키 저장 가능 여부에 대한 질문에는 localStorage 평문 키 저장을 권장하지 않으며 서버 .env 보관을 안내했다.
+- API 키 입력은 password 필드와 탭 메모리만 사용한다. 키는 요청 단위로 선택한 제공자에게만 전달하고 서버 환경변수를 덮어쓰지 않는다. 새로고침·제공자 변경·지우기로 제거한다. localStorage는 API·모델 ID만 허용 목록으로 저장하며 키·본문·사용 확인·대본은 저장하지 않는다. 서버 키 값은 상태 응답에 포함하지 않는다.
+- NVIDIA 기존 키/모델 유지, OpenAI Responses API의 이미지 입력 + strict JSON Schema + store=false 연결. 기본 모델은 현재 공식 문서에서 이미지/구조화 출력을 지원하는 gpt-5.6-terra이며 화면/.env에서 제공 계정의 모델로 변경 가능. 기본 모델에 reasoning low 적용. Gemini 코드와 env 항목 제거, OpenAI 키는 빈 자리만 준비했다.
+- 새로 입력한 키는 제공 크레딧/무료 범위 확인 체크가 필요하고, 서버 OpenAI 키는 OPENAI_CREDITS_CONFIRMED로 별도 확인한다. 자동 결제·충전·실패 재시도 없음. 오류 응답은 키나 외부 응답 본문을 노출하지 않는다. 로컬 Origin/Host 검증과 API no-store 적용.
+- 실제 ElevenLabs 목록에서 Roger - Laid-Back, Casual, Resonant (CwhRBWXzGAHq8TQ4Fs17) 사용 가능 확인. 새 화면에서 Roger를 우선 선택하고 사용자가 선택을 바꾼 뒤에는 비동기 조회가 덮어쓰지 않는다. 사용할 수 없으면 Windows 음성으로 안내하고 미사용 TTS 설정은 비활성 유지한다.
+- 공식 자료: https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses , https://developers.openai.com/api/docs/guides/images-vision?api-mode=responses , https://developers.openai.com/api/docs/models/gpt-5.6-terra . OpenAI Docs 스킬을 적용했다.
+- 진행 중: 새 설정 UI·키 초기화·설정 복원 브라우저 검증, 테스트/빌드, 후속 커밋·푸시. 실제 OpenAI 키가 없어 실제 GPT 생성은 미실행이며 모의 요청 형식과 오류 경로로 검증한다.
+- 완료 검증: 프런트 22개 + Python 84개, TypeScript/Python 구문·빌드·diff 검사 통과. OpenAI Responses 이미지/JSON Schema/store=false 요청, 제공자별 키 격리, 크레딧 확인, 미완료·거절·401·잘못된 JSON 처리, 자동 재시도 없음, 상태 응답의 키 미노출 검증을 포함한다.
+- 실제 브라우저: OpenAI 선택·모델 ID가 새로고침 후 복원되고 가짜 테스트 키와 확인 체크는 초기화됨을 확인했다. 본문만/키만 있을 때 생성 비활성, 키+사용 범위 확인 후 활성 확인. 가짜 키로 외부 API는 호출하지 않았다. 실제 ElevenLabs 목록 조회 후 Roger가 선택되며 TTS 해제 시 제공자와 음성 선택 비활성, 재체크 복원 확인. 증빙 local-data/openai-settings-ui.png.
+- 이번 후속 변경에서 실제 GPT 생성과 추가 ElevenLabs 합성은 미실행. Python 전환에서 확인한 실제 NVIDIA/크롤링/Windows 음성/MP4 출력 결과와 구별한다. 로컬 서버에 새 빌드를 반영했고 원래 사용자 탭은 초기화하지 않았다.
