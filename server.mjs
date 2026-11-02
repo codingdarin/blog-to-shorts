@@ -42,9 +42,19 @@ http.createServer(async(req,res)=>{try{
   if(!musicCatalog.some(m=>m.id===audio?.music)||!Number.isFinite(audio.volume)||audio.volume<0||audio.volume>.5||typeof audio.sfx!=='boolean')return json(res,400,{error:'음향 설정을 확인해 주세요.'});
   if(voice&&tts.provider==='local'&&process.platform!=='win32')return json(res,400,{error:'이 서버에서는 ElevenLabs 음성을 선택해 주세요. 기본 한국어 음성은 Windows에서 사용할 수 있어요.'});
   if(renderBusy)return json(res,409,{error:'다른 영상을 생성하고 있어요. 잠시 후 다시 시도해 주세요.'});renderBusy=true;
-  let rendered;try{rendered=await renderVideo(frames,texts,voice,audio,tts,duration);}finally{renderBusy=false;}
+  const streaming=req.headers.accept?.includes('application/x-ndjson');
+  const send=event=>{if(!res.destroyed)res.write(JSON.stringify(event)+'\n');};
+  if(streaming){res.writeHead(200,{'Content-Type':'application/x-ndjson; charset=utf-8','Cache-Control':'no-cache, no-transform','X-Accel-Buffering':'no'});res.flushHeaders();}
+  // Heartbeats keep an active long-running TTS request distinguishable from silence.
+  const heartbeat=streaming?setInterval(()=>send({type:'heartbeat'}),10000):null;
+  let rendered;
+  try{rendered=await renderVideo(frames,texts,voice,audio,tts,duration,(percent,label)=>{if(streaming)send({type:'progress',percent,label});});}
+  catch(error){if(streaming){send({type:'error',error:error.message});res.end();return;}throw error;}
+  finally{renderBusy=false;if(heartbeat)clearInterval(heartbeat);}
   const videoId=randomUUID();while(downloads.size>=3)downloads.delete(downloads.keys().next().value);downloads.set(videoId,rendered.video);setTimeout(()=>downloads.delete(videoId),15*60*1000).unref();
-  return json(res,200,{videoUrl:`/api/video/${videoId}`,duration:rendered.duration,subtitles:rendered.subtitles});
+  const result={videoUrl:`/api/video/${videoId}`,duration:rendered.duration,subtitles:rendered.subtitles};
+  if(streaming){send({type:'complete',result});res.end();return;}
+  return json(res,200,result);
  }
  const files={'/':'index.html','/app.js':'app.js','/style.css':'style.css'};
  if(req.method==='GET'&&files[url.pathname]){const file=await readFile('dist/'+files[url.pathname]);res.writeHead(200,{'Content-Type':url.pathname.endsWith('.js')?'text/javascript':url.pathname.endsWith('.css')?'text/css':'text/html; charset=utf-8'});res.end(file);return;}
