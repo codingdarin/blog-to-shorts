@@ -52,3 +52,25 @@ test('unfinished caption edits block rendering without discarding the user text'
  assert.equal(narrationFromCaptions(['첫 자막이에요.','새 자막이에요.']),'첫 자막이에요. 새 자막이에요.');
  assert.equal(narrationFromCaptions(['첫 자막이에요.']),'첫 자막이에요.');
 });
+
+
+test('automatic captions move the whole predicate phrase instead of leaving a short tail',()=>{
+ const content='자격동스쿨의 최신 건설기계기술사 패키지는 주요 이론과 기출문제 학습을 함께 다뤄요.';
+ const pages=captionPages(content,measure);
+ assert.deepEqual(pages.map(p=>p.text),['자격동스쿨의 최신 건설기계기술사 패키지는','주요 이론과 기출문제 학습을 함께 다뤄요.']);
+ for(const sample of [content,'먼저 건설기계 구조와 작동 원리, 설계와 유지관리 지식을 체계적으로 정리해 보세요.','기출문제로 출제 경향을 확인한 뒤 답안을 직접 작성하는 연습을 병행하는 것이 중요해요.']){
+  const result=captionPages(sample,measure);
+  assert.deepEqual(result.flatMap(p=>p.text.split(' ')),sample.split(' '));
+  assert.ok(result.every(p=>p.text.split(' ').length>=3));
+  assert.ok(result.every(p=>p.lines.length<=2&&p.lines.every(line=>measure(line)<=636)));
+  assert.ok(!result.some(p=>/작성하는$/.test(p.text)));
+ }
+});
+
+test('complete short sentences remain intact and manual edits are never resegmented',()=>{
+ const content='확인해 보세요. 함께 시작해요!';
+ assert.deepEqual(captionPages(content,measure).map(p=>p.text),['확인해 보세요.','함께 시작해요!']);
+ const manual=['주요 이론과\n기출문제 학습을','함께 다뤄요.'];
+ assert.deepEqual(editableCaptionPages(manual).map(p=>p.lines.join('\n')),manual);
+ assert.deepEqual(captionPages('',measure),[]);
+});

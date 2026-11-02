@@ -1,23 +1,54 @@
-import {balancedLines} from './text-layout.js';
-
 export const CAPTION_BOX={x:0,y:973,width:720,height:150};
 export const CAPTION_FONT_SIZE=34;
-export function captionPages(text,measure,width=636){
- const words=text.trim().split(/\s+/).filter(Boolean),pages=[];
- const lines=part=>balancedLines(part,measure,width,{breakWords:false});
- let pending=[];
- while(words.length){
-  const word=words.shift(),candidate=[...pending,word];
-  if(pending.length&&lines(candidate.join(' ')).length>2){
-   // Prefer the last complete sentence when it fits; otherwise break between words.
-   let cut=pending.length;
-   for(let i=pending.length-1;i>=0;i--)if(/[.!?。！？]["'”’)]*$/.test(pending[i])){cut=i+1;break;}
-   pages.push(pending.slice(0,cut).join(' '));
-   words.unshift(...pending.slice(cut),word);pending=[];
-  }else pending=candidate;
+const sentenceEnd=word=>/[.!?。！？]["'”’)]*$/.test(word);
+// A lightweight Korean boundary preference, not a full grammatical parser.
+function boundaryCost(before,after){
+ if(sentenceEnd(before))return 0;
+ if(/^(수|뒤|때|것|것이|것을|있어요|있죠|없어요|보세요|해요|돼요|드려요)[.!?,]?$/.test(after))return 65;
+ if(/(하는|되는|있는|없는|위한|대한|통한|익힌|확인한|작성한|배운)$/.test(before))return 55;
+ if(/^(주요|핵심|최신|다양한|필요한|중요한|이런|그런|모든)$/.test(before)||/(의|과|와|을|를)$/.test(before))return 45;
+ if(/(은|는|이|가)$/.test(before))return -14;
+ if(/[,，:：]$/.test(before)||/(하면|하지만|다면|으며|면서|하고|고)$/.test(before))return -6;
+ return 12;
+}
+function captionLines(words,measure,width){
+ const text=words.join(' ');
+ if(measure(text)<=width||words.length===1)return [text];
+ let best;
+ for(let cut=1;cut<words.length;cut++){
+  const rows=[words.slice(0,cut).join(' '),words.slice(cut).join(' ')],sizes=rows.map(measure);
+  if(sizes.some(size=>size>width))continue;
+  const cost=((sizes[0]-sizes[1])/width)**2*20+Math.max(0,boundaryCost(words[cut-1],words[cut]))*.12;
+  if(!best||cost<best.cost)best={cost,rows};
  }
- if(pending.length)pages.push(pending.join(' '));
- return pages.map(text=>({text,lines:lines(text)}));
+ return best?.rows;
+}
+export function captionPages(text,measure,width=636){
+ const words=text.trim().split(/\s+/).filter(Boolean),sentences=[],pages=[];
+ let sentence=[];
+ for(const word of words){sentence.push(word);if(sentenceEnd(word)){sentences.push(sentence);sentence=[];}}
+ if(sentence.length)sentences.push(sentence);
+ for(const tokens of sentences){
+  // Optimize the whole sentence so a short predicate is not left on the next page.
+  const memo=new Map();
+  function solve(start){
+   if(start===tokens.length)return {cost:0,pages:[]};
+   if(memo.has(start))return memo.get(start);
+   let best;
+   for(let end=start+1;end<=tokens.length;end++){
+    const part=tokens.slice(start,end),lines=captionLines(part,measure,width);
+    if(!lines)continue;
+    const rest=solve(end),size=measure(part.join(' '))/(width*2);
+    const orphan=part.length===1?65:part.length===2?22:0;
+    const boundary=end<tokens.length?boundaryCost(tokens[end-1],tokens[end]):0;
+    const cost=100+Math.max(0,1-size)**2*20+orphan+boundary+rest.cost;
+    if(!best||cost<best.cost)best={cost,pages:[{text:part.join(' '),lines},...rest.pages]};
+   }
+   memo.set(start,best);return best;
+  }
+  pages.push(...solve(0).pages);
+ }
+ return pages;
 }
 export const captionWeight=text=>Math.max(1,text.replace(/\s/g,'').length);
 export function captionAt(pages,progress){
