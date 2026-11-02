@@ -5,8 +5,16 @@
  * @returns {Promise<{videoUrl:string,duration:number,subtitles:string,filename:string,requestedSpeed?:number|null,narrationSpeed?:number|null}>}
  */
 export async function readRenderStream(response,onProgress){
- if(!response.ok){const data=await response.json();throw Error(data.error||'영상 생성 요청에 실패했어요.');}
- if(!response.body)throw Error('영상 진행 상황을 연결하지 못했어요.');
+ return readProgressStream(response,onProgress);
+}
+/**
+ * @param {Response} response
+ * @param {(event: {percent:number,label:string}) => void} onProgress
+ * @returns {Promise<any>}
+ */
+export async function readProgressStream(response,onProgress){
+ if(!response.ok){const data=await response.json();throw Error(data.error||'생성 요청에 실패했어요.');}
+ if(!response.body)throw Error('진행 상황을 연결하지 못했어요.');
  const reader=response.body.getReader(),decoder=new TextDecoder();let pending='',result;
  function consume(line){
   if(!line.trim())return;

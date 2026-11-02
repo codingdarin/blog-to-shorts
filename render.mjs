@@ -7,15 +7,17 @@ import {musicWav,musicCatalog} from './music.mjs';
 import {generateElevenScenes} from './elevenlabs.mjs';
 import {sceneDurations,srtSubtitles,narrationSpeed,fittedNarrationSpeed,tempoFilter} from './timing.mjs';
 import {photoMotionFilter} from './src/photo-motion.js';
+import {captionTiming,CAPTION_BOX} from './src/captions.js';
 function run(command,args){return new Promise((resolve,reject)=>{const p=spawn(command,args,{windowsHide:true});let log='';p.stderr.on('data',x=>{log=(log+x).slice(-4000);});p.on('error',reject);p.on('close',code=>code===0?resolve(log):reject(Error(command===ffmpeg?'영상 변환 실패':'한국어 음성 합성 실패. 설치된 음성을 확인하세요.')));});}
 function wavDuration(b){let rate=0,size=0;for(let i=12;i+8<=b.length;){const tag=b.toString('ascii',i,i+4),n=b.readUInt32LE(i+4);if(tag==='fmt ')rate=b.readUInt32LE(i+16);if(tag==='data')size=n;i+=8+n+(n%2);}if(!rate||!size)throw Error('음성 길이 확인 실패');return size/rate;}
-export async function renderVideo(frames,texts,voice,audio={music:'none',volume:.16,sfx:false},tts={provider:'local'},targetDuration=45,onProgress=()=>{},motionLayers=[]){
+export async function renderVideo(frames,texts,voice,audio={music:'none',volume:.16,sfx:false},tts={provider:'local'},targetDuration=45,onProgress=()=>{},motionLayers=[],captionLayers=[]){
  const speed=narrationSpeed(tts.speed);
  const dir=path.resolve('renders',randomUUID());await mkdir(dir,{recursive:true});
  try{
  onProgress(8,'장면 이미지를 준비하고 있어요.');
  for(let i=0;i<frames.length;i++)await writeFile(path.join(dir,`${i}.png`),Buffer.from(frames[i].split(',')[1],'base64'));
  for(let i=0;i<motionLayers.length;i++)if(motionLayers[i])await writeFile(path.join(dir,`${i}-photo.png`),Buffer.from(motionLayers[i].split(',')[1],'base64'));
+ for(let i=0;i<captionLayers.length;i++)for(let j=0;j<captionLayers[i].length;j++)await writeFile(path.join(dir,`${i}-caption-${j}.png`),Buffer.from(captionLayers[i][j].dataUrl.split(',')[1],'base64'));
  if(voice&&tts.provider==='elevenlabs'){
   onProgress(10,`ElevenLabs 계정 확인 및 음성 생성 중 · 0/${texts.length}장면 완료`);
   await generateElevenScenes(texts,tts.voiceId,async(i,bytes)=>{const mp3=path.join(dir,`${i}.mp3`);await writeFile(mp3,bytes);await run(ffmpeg,['-y','-i',mp3,'-ar','24000','-ac','1','-c:a','pcm_s16le',path.join(dir,`${i}.wav`)]);onProgress(Math.round(10+30*(i+1)/texts.length),`ElevenLabs 음성 생성 중 · ${i+1}/${texts.length}장면 완료`);});
@@ -37,13 +39,21 @@ export async function renderVideo(frames,texts,voice,audio={music:'none',volume:
  }
  onProgress(44,'음성 길이에 맞춰 장면과 자막 시간을 계산하고 있어요.');
  const durations=sceneDurations(texts,speech,targetDuration);
+ const cues=captionLayers.map((pages,i)=>captionTiming(pages,durations[i],speech?.[i]??durations[i]));
  let duration=0;const cuts=[];
  for(let i=0;i<frames.length;i++){
  onProgress(Math.round(45+40*i/frames.length),`장면 ${i+1}/${frames.length} · 이미지·음성·자막 합성 중`);
  const seconds=durations[i];if(i)cuts.push(duration);duration+=seconds;
- const moving=!!motionLayers[i];
- const visual=moving?['-filter_complex',`[1:v]${photoMotionFilter(i,Math.round(seconds*30))}[photo];[0:v][photo]overlay=50:305:shortest=1,scale=1080:1920,setsar=1[v]`,'-map','[v]']:['-vf','scale=1080:1920,setsar=1','-map','0:v'];
- await run(ffmpeg,['-y','-loop','1','-framerate','30','-i',path.join(dir,`${i}.png`),...(moving?['-loop','1','-framerate','30','-i',path.join(dir,`${i}-photo.png`)]:[]),...(voice?['-i',speechFile(i)]:[]),...visual,...(voice?['-map',`${moving?2:1}:a`,'-af','apad','-c:a','aac','-ar','48000']:[]),'-t',String(seconds),'-r','30','-c:v','libx264','-threads','2','-preset','ultrafast','-pix_fmt','yuv420p',path.join(dir,`${i}.mp4`)]);
+ const moving=!!motionLayers[i],pages=captionLayers[i]||[],firstCaption=moving?2:1;
+ const filters=moving?[`[1:v]${photoMotionFilter(i,Math.round(seconds*30))}[photo]`,'[0:v][photo]overlay=50:305:shortest=1[base]']:['[0:v]null[base]'];
+ let previous='base';
+ pages.forEach((_,j)=>{
+  const cue=cues[i][j],next=`caption${j}`;
+  filters.push(`[${previous}][${firstCaption+j}:v]overlay=${CAPTION_BOX.x}:${CAPTION_BOX.y}:shortest=1:enable='gte(t,${cue.start-.000001})*lt(t,${cue.end-.000001})'[${next}]`);previous=next;
+ });
+ filters.push(`[${previous}]scale=1080:1920,setsar=1[v]`);
+ const captionInputs=pages.flatMap((_,j)=>['-loop','1','-framerate','30','-i',path.join(dir,`${i}-caption-${j}.png`)]);
+ await run(ffmpeg,['-y','-loop','1','-framerate','30','-i',path.join(dir,`${i}.png`),...(moving?['-loop','1','-framerate','30','-i',path.join(dir,`${i}-photo.png`)]:[]),...captionInputs,...(voice?['-i',speechFile(i)]:[]),'-filter_complex_threads','2','-filter_complex',filters.join(';'),'-map','[v]',...(voice?['-map',`${firstCaption+pages.length}:a`,'-af','apad','-c:a','aac','-ar','48000']:[]),'-t',String(seconds),'-r','30','-c:v','libx264','-threads','2','-preset','ultrafast','-pix_fmt','yuv420p',path.join(dir,`${i}.mp4`)]);
  }
  onProgress(87,'장면들을 하나의 영상으로 연결하고 있어요.');
  await writeFile(path.join(dir,'list.txt'),frames.map((_,i)=>`file '${i}.mp4'`).join('\n'));
@@ -59,6 +69,7 @@ export async function renderVideo(frames,texts,voice,audio={music:'none',volume:
   await run(ffmpeg,['-y','-i',output,'-i',path.join(dir,'music.wav'),...(track?.file?['-stream_loop','-1','-i',path.resolve(track.file)]:[]),'-filter_complex',filter,'-map','0:v','-map','[a]','-c:v','copy','-c:a','aac','-ar','48000','-t',String(duration),'-movflags','+faststart',mixed]);output=mixed;
  }
  onProgress(97,'완성 영상과 다운로드 파일을 준비하고 있어요.');
- return {video:await readFile(output),duration,subtitles:srtSubtitles(texts,durations),requestedSpeed:voice?speed:null,narrationSpeed:voice?effectiveSpeed:null};
+ const subtitles=cues.length?srtSubtitles(cues.flat().map(c=>c.text),cues.flat().map(c=>c.end-c.start)):srtSubtitles(texts,durations);
+ return {video:await readFile(output),duration,subtitles,requestedSpeed:voice?speed:null,narrationSpeed:voice?effectiveSpeed:null};
  }finally{await rm(dir,{recursive:true,force:true});}
 }

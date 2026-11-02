@@ -46,3 +46,22 @@ test('both provider payloads carry image bytes, not only captions',async()=>{
   }
  }finally{globalThis.fetch=saved.fetch;for(const [key,value] of [['NVIDIA_API_KEY',saved.nvidia],['GEMINI_API_KEY',saved.gemini],['AI_FREE_TIER_CONFIRMED',saved.confirmed]]){if(value===undefined)delete process.env[key];else process.env[key]=value;}}
 });
+
+test('few-shot course examples apply only to shorts and keep grounded output rules',async()=>{
+ const {SHORTS_EXAMPLES,narrationStyleIssues}=await import('../ai.mjs');
+ assert.equal(SHORTS_EXAMPLES.length,3);
+ for(const example of SHORTS_EXAMPLES){assert.equal(example.texts.length,5);assert.deepEqual(narrationStyleIssues(example.texts),[]);assert.ok(example.texts.every(t=>t.length>=10&&t.length<=160));}
+ for(const tone of ['shorts','education','review','marketing'])await planBlog({...input,tone},async prompt=>{
+  assert.equal(prompt.includes('가상 퓨샷 예시'),tone==='shorts');
+  if(tone==='shorts'){assert.match(prompt,/원문에 복사하지 마세요/);assert.match(prompt,/강의·상품이 없으면/);assert.match(prompt,/실제 요청 장면 수/);for(const example of SHORTS_EXAMPLES)assert.ok(prompt.includes(example.template));}
+  return draft(5);
+ });
+});
+
+test('AI progress reports actual response and repair milestones without early completion',async()=>{
+ const seen=[];let calls=0;
+ await planBlog(input,async()=>{calls++;const d=draft(5);if(calls===1)d.scenes[1].text='내용을 확인합니다.';return d;},(percent,label)=>seen.push({percent,label}));
+ assert.deepEqual(seen.map(p=>p.percent),[10,25,75,85,95,98]);assert.match(seen[3].label,/교정/);
+ const failed=[];await assert.rejects(planBlog(input,async()=>{throw Error('API unavailable');},p=>failed.push(p)),/unavailable/);
+ assert.deepEqual(failed,[10,25]);
+});
