@@ -28,3 +28,10 @@ export function balancedLines(text, measure, maxWidth, {breakWords=true}={}) {
  }
  return tokens;
 }
+
+// Keep an explicit title break at the chosen word, independently of auto layout.
+export function titleLines(text, measure, maxWidth) {
+ const rows=text.split(/\r?\n/).map(row=>row.trim()).filter(Boolean);
+ if(rows.length>1)return [rows[0],rows.slice(1).join(' ')];
+ return balancedLines(text,measure,maxWidth,{breakWords:false});
+}

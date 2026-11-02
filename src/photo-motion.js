@@ -9,8 +9,12 @@ export function photoMotion(progress,index=0){
  const p=Math.max(0,Math.min(1,progress)),t=p*p*(3-2*p),profile=profiles[index%profiles.length];
  return {zoom:profile.from+(profile.to-profile.from)*t,pan:profile.left+(profile.right-profile.left)*t};
 }
-// The input layer covers the fixed photo box; zoom/pan intentionally crops its edges.
+// Resample fractional crop coordinates instead of zoompan's integer crop rectangle.
+// Keep full-resolution color planes during the transform to avoid chroma-grid snapping.
 export function photoMotionFilter(index,frames){
- const p=`(on/${Math.max(1,frames-1)})`,t=`(${p}*${p}*(3-2*${p}))`,profile=profiles[index%profiles.length];
- return `scale=1240:1200,zoompan=z='${profile.from}+(${profile.to-profile.from})*${t}':x='(iw-iw/zoom)*(${profile.left}+(${profile.right-profile.left})*${t})':y='(ih-ih/zoom)/2':d=1:s=620x600:fps=30`;
+ // perspective's output counter starts at 1, unlike zoompan's zero-based counter.
+ const p=`min(1,max(0,on-1)/${Math.max(1,frames-1)})`,t=`((${p})*(${p})*(3-2*(${p})))`,profile=profiles[index%profiles.length];
+ const zoom=`(${profile.from}+(${profile.to-profile.from})*${t})`,pan=`(${profile.left}+(${profile.right-profile.left})*${t})`;
+ const left=`(W-W/${zoom})*${pan}`,top=`(H-H/${zoom})/2`;
+ return `format=gbrp,perspective=x0='${left}':y0='${top}':x1='${left}+W/${zoom}':y1='${top}':x2='${left}':y2='${top}+H/${zoom}':x3='${left}+W/${zoom}':y3='${top}+H/${zoom}':sense=source:eval=frame:interpolation=cubic`;
 }

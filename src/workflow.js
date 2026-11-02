@@ -1,4 +1,4 @@
-import {balancedLines} from './text-layout.js';
+import {titleLines} from './text-layout.js';
 import {PHOTO_BOX,photoMotion} from './photo-motion.js';
 import {CAPTION_BOX,CAPTION_FONT_SIZE,captionPages,captionAt} from './captions.js';
 
@@ -43,13 +43,13 @@ export function captionLayers(scene){
 }
 export function drawFrame(canvas,{headline,scene,photos,source,index=0,count=5,hidePhoto=false,hideCaption=false,captionProgress=0,motionProgress=/** @type {number|undefined} */(undefined)}){
  const ctx=canvas.getContext('2d');ctx.fillStyle='#000000';ctx.fillRect(0,0,720,1280);ctx.textAlign='center';
- function fit(text,maxWidth,maxLines,startSize,minSize,breakWords=true){
+ function fit(text,maxWidth,maxLines,startSize,minSize){
   let size=startSize,rows=[];
-  do{ctx.font=`bold ${size}px "Malgun Gothic",sans-serif`;rows=balancedLines(text,t=>ctx.measureText(t).width,maxWidth,{breakWords});if((rows.length<=maxLines&&rows.every(row=>ctx.measureText(row).width<=maxWidth))||size<=minSize)break;size-=2;}while(true);
+  do{ctx.font=`bold ${size}px "Malgun Gothic",sans-serif`;rows=titleLines(text,t=>ctx.measureText(t).width,maxWidth);if((rows.length<=maxLines&&rows.every(row=>ctx.measureText(row).width<=maxWidth))||size<=minSize)break;size-=2;}while(true);
   return {size,rows};
  }
- // Shrink long titles instead of splitting a word; emphasize the second line.
- const title=fit((headline||'블로그의 지식을 한 편의 쇼츠로').replaceAll('|',' '),630,2,46,2,false);
+ // Honor manual line breaks, shrink long rows, and emphasize the second line.
+ const title=fit((headline||'블로그의 지식을 한 편의 쇼츠로').replaceAll('|',' '),630,2,46,2);
  title.rows.forEach((line,i)=>{ctx.fillStyle=i===1?'#facc15':'#fff';ctx.fillText(line,360,135+i*(title.size+10));});
  const photo=photos.find(p=>p.id===scene?.photoId);
  if(photo&&!hidePhoto){
