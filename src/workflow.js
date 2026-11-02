@@ -18,7 +18,7 @@ export function downloadText(text,name,type='text/plain'){
  a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);
 }
 export function drawFrame(canvas,{headline,scene,photos,source,index=0,count=5}){
- const ctx=canvas.getContext('2d');ctx.fillStyle='#0b1220';ctx.fillRect(0,0,720,1280);ctx.textAlign='center';
+ const ctx=canvas.getContext('2d');ctx.fillStyle='#000000';ctx.fillRect(0,0,720,1280);ctx.textAlign='center';
  function fit(text,maxWidth,maxLines,startSize,minSize,breakWords=true){
   let size=startSize,rows=[];
   do{ctx.font=`bold ${size}px "Malgun Gothic",sans-serif`;rows=balancedLines(text,t=>ctx.measureText(t).width,maxWidth,{breakWords});if((rows.length<=maxLines&&rows.every(row=>ctx.measureText(row).width<=maxWidth))||size<=minSize)break;size-=2;}while(true);

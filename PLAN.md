@@ -77,3 +77,4 @@
 - 브라우저의 기존 대본·이미지 선택·음성·BGM을 복원해 변경된 캔버스 미리보기를 확인했다. 실제 제목은 '건설기계기술사 독학,' / '필기 준비와 공부 방법'으로 나뉜다. 일반 제목 두 줄과 긴 단어 보존을 직접 검증했다.
 - 같은 대본과 Roger 음성·Salsa BGM으로 다시 합성했다. local-data/education-clean-layout.mp4, 약 50.8초, 3,935,031바이트. 전체 디코딩 정상. 추출한 local-data/layout-clean-frame.png에서 배경·제목 색·상단 표기 제거를 확인했다. UI 증빙은 local-data/layout-clean-ui.png.
 - 기존 테스트 35개, 구문·TypeScript 검사, 프로덕션 빌드와 git diff --check 통과. 새로 생성하는 영상과 미리보기에 적용되며 이전 MP4 자체를 수정하지는 않는다.
+- 후속 사용자 지정: 영상 배경은 네이비가 아닌 순수 블랙(#000000)으로 확정하고 공통 캔버스 렌더러에 적용했다. 블랙 변경 후 타입 검사·빌드와 브라우저 미리보기를 확인했다(local-data/layout-black-ui.png). 앞서 저장한 education-clean-layout.mp4는 블랙 변경 전 검증 영상이다. 블랙 배경으로 TTS를 다시 호출하지는 않았다.
