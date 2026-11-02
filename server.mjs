@@ -5,7 +5,8 @@ import {getBlog} from './blog.mjs';
 import {planBlog,validatePlanInput,narrationStyleIssues} from './ai.mjs';
 import {elevenOptions} from './elevenlabs.mjs';
 import {renderVideo} from './render.mjs';
-import {musicCatalog,musicWav} from './music.mjs';
+import {narrationSpeed} from './timing.mjs';
+import {musicCatalog,defaultMusicId} from './music.mjs';
 try { process.loadEnvFile(); } catch {}
 const port=Number(process.env.PORT||4311),host=process.env.HOST||'127.0.0.1';
 const allowedOrigins=new Set([`http://localhost:${port}`,`http://127.0.0.1:${port}`,process.env.PUBLIC_ORIGIN].filter(Boolean));
@@ -29,15 +30,16 @@ http.createServer(async(req,res)=>{try{
   if(analysisBusy)return json(res,409,{error:'대본 생성 중이에요. 잠시 후 다시 시도해 주세요.'});analysisBusy=true;
   try{return json(res,200,{...await planBlog(input),mode:'ai'});}finally{analysisBusy=false;}
  }
- if(req.method==='GET'&&url.pathname==='/api/music')return json(res,200,{tracks:musicCatalog.map(({file,preview,...rest})=>rest),defaultId:'light'});
- if(req.method==='GET'&&url.pathname==='/api/music/light'){const wav=musicWav(20,{music:'light',volume:.3});res.writeHead(200,{'Content-Type':'audio/wav','Content-Length':wav.length});res.end(wav);return;}
+ if(req.method==='GET'&&url.pathname==='/api/music')return json(res,200,{tracks:musicCatalog.map(({file,preview,...rest})=>rest),defaultId:defaultMusicId});
  if(req.method==='GET'&&url.pathname.startsWith('/api/music/')){const track=musicCatalog.find(t=>t.id===url.pathname.split('/').pop());if(track?.preview){const bytes=await readFile(track.preview);res.writeHead(200,{'Content-Type':'audio/mpeg','Content-Length':bytes.length});res.end(bytes);return;}}
  if(req.method==='GET'&&url.pathname.startsWith('/api/video/')){const video=downloads.get(url.pathname.slice('/api/video/'.length));if(!video)return json(res,404,{error:'다운로드 시간이 만료됐어요. 영상을 다시 만들어 주세요.'});res.writeHead(200,{'Content-Type':'video/mp4','Content-Length':video.length,'Content-Disposition':'attachment; filename=blog-short.mp4'});res.end(video);return;}
  if(req.method==='POST'&&url.pathname==='/api/render'){
-  const {frames,texts,duration=45,voice=true,audio={music:'none',volume:.12,sfx:false},tts={provider:'local'}}=await body(req);
+  const {frames,texts,duration=45,voice=true,audio={music:'none',volume:.12,sfx:false},tts={provider:'local'},motionLayers=[]}=await body(req);
   if(!Number.isInteger(duration)||duration<30||duration>60)return json(res,400,{error:'목표 길이는 30~60초로 선택해 주세요.'});
   if(typeof voice!=='boolean'||!['local','elevenlabs'].includes(tts?.provider))return json(res,400,{error:'내레이션 설정을 확인해 주세요.'});
+  try{narrationSpeed(tts.speed);}catch(error){return json(res,400,{error:error.message});}
   if(!Array.isArray(frames)||frames.length<4||frames.length>6||frames.some(f=>typeof f!=='string'||!/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/.test(f)))return json(res,400,{error:'장면 이미지 4~6개가 필요해요.'});
+  if(!Array.isArray(motionLayers)||(motionLayers.length!==0&&motionLayers.length!==frames.length)||motionLayers.some(f=>f!==null&&(typeof f!=='string'||!/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/.test(f))))return json(res,400,{error:'사진 움직임 레이어를 확인해 주세요.'});
   if(!Array.isArray(texts)||texts.length!==frames.length||texts.some(t=>typeof t!=='string'||!t.trim()||t.length>160)||narrationStyleIssues(texts).length)return json(res,400,{error:'각 장면은 160자 이하의 완결된 해요체로 작성해 주세요. 예: 확인해 보세요.'});
   if(!musicCatalog.some(m=>m.id===audio?.music)||!Number.isFinite(audio.volume)||audio.volume<0||audio.volume>.5||typeof audio.sfx!=='boolean')return json(res,400,{error:'음향 설정을 확인해 주세요.'});
   if(voice&&tts.provider==='local'&&process.platform!=='win32')return json(res,400,{error:'이 서버에서는 ElevenLabs 음성을 선택해 주세요. 기본 한국어 음성은 Windows에서 사용할 수 있어요.'});
@@ -48,11 +50,11 @@ http.createServer(async(req,res)=>{try{
   // Heartbeats keep an active long-running TTS request distinguishable from silence.
   const heartbeat=streaming?setInterval(()=>send({type:'heartbeat'}),10000):null;
   let rendered;
-  try{rendered=await renderVideo(frames,texts,voice,audio,tts,duration,(percent,label)=>{if(streaming)send({type:'progress',percent,label});});}
+  try{rendered=await renderVideo(frames,texts,voice,audio,tts,duration,(percent,label)=>{if(streaming)send({type:'progress',percent,label});},motionLayers);}
   catch(error){if(streaming){send({type:'error',error:error.message});res.end();return;}throw error;}
   finally{renderBusy=false;if(heartbeat)clearInterval(heartbeat);}
   const videoId=randomUUID();while(downloads.size>=3)downloads.delete(downloads.keys().next().value);downloads.set(videoId,rendered.video);setTimeout(()=>downloads.delete(videoId),15*60*1000).unref();
-  const result={videoUrl:`/api/video/${videoId}`,duration:rendered.duration,subtitles:rendered.subtitles};
+  const result={videoUrl:`/api/video/${videoId}`,duration:rendered.duration,subtitles:rendered.subtitles,requestedSpeed:rendered.requestedSpeed,narrationSpeed:rendered.narrationSpeed};
   if(streaming){send({type:'complete',result});res.end();return;}
   return json(res,200,result);
  }

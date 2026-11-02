@@ -1,4 +1,5 @@
 import {balancedLines} from './text-layout.js';
+import {PHOTO_BOX,photoMotion} from './photo-motion.js';
 
 export async function api(url,body){
  const response=await fetch(url,body===undefined?undefined:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -17,7 +18,14 @@ export function downloadText(text,name,type='text/plain'){
  const url=URL.createObjectURL(new Blob([text],{type:`${type};charset=utf-8`})),a=document.createElement('a');
  a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);
 }
-export function drawFrame(canvas,{headline,scene,photos,source,index=0,count=5}){
+export function photoLayer(photo){
+ const surface=document.createElement('canvas');surface.width=PHOTO_BOX.width;surface.height=PHOTO_BOX.height;
+ const ctx=surface.getContext('2d');ctx.fillStyle='#000';ctx.fillRect(0,0,surface.width,surface.height);
+ const ratio=Math.min(surface.width/photo.image.width,surface.height/photo.image.height)*.94,w=photo.image.width*ratio,h=photo.image.height*ratio;
+ ctx.drawImage(photo.image,(surface.width-w)/2,(surface.height-h)/2,w,h);
+ return surface.toDataURL('image/png');
+}
+export function drawFrame(canvas,{headline,scene,photos,source,index=0,count=5,hidePhoto=false,motionProgress=/** @type {number|undefined} */(undefined)}){
  const ctx=canvas.getContext('2d');ctx.fillStyle='#000000';ctx.fillRect(0,0,720,1280);ctx.textAlign='center';
  function fit(text,maxWidth,maxLines,startSize,minSize,breakWords=true){
   let size=startSize,rows=[];
@@ -28,11 +36,12 @@ export function drawFrame(canvas,{headline,scene,photos,source,index=0,count=5})
  const title=fit((headline||'블로그의 지식을 한 편의 쇼츠로').replaceAll('|',' '),630,2,46,2,false);
  title.rows.forEach((line,i)=>{ctx.fillStyle=i===1?'#facc15':'#fff';ctx.fillText(line,360,135+i*(title.size+10));});
  const photo=photos.find(p=>p.id===scene?.photoId);
- if(photo){
+ if(photo&&!hidePhoto){
   // Contain educational diagrams and screenshots so text is not cropped away.
-  const ratio=Math.min(620/photo.image.width,600/photo.image.height),w=photo.image.width*ratio,h=photo.image.height*ratio;
-  ctx.drawImage(photo.image,50+(620-w)/2,305+(600-h)/2,w,h);
- }else{
+  const moving=motionProgress!==undefined,ratio=Math.min(620/photo.image.width,600/photo.image.height)*(moving?.94:1),w=photo.image.width*ratio,h=photo.image.height*ratio;
+  const {zoom,pan}=moving?photoMotion(motionProgress,index):{zoom:1,pan:.5};
+  ctx.drawImage(photo.image,50+((620-w)/2-(620-620/zoom)*pan)*zoom,305+((600-h)/2-(600-600/zoom)/2)*zoom,w*zoom,h*zoom);
+ }else if(!photo){
   ctx.fillStyle='#93c5fd';ctx.font='bold 34px "Malgun Gothic",sans-serif';ctx.fillText(scene?.role==='hook'?'함께 알아볼까요?':scene?.role==='cta'?'핵심을 기억해 보세요':'오늘의 핵심',360,580);
   ctx.fillStyle='#cbd5e1';ctx.font='24px "Malgun Gothic",sans-serif';ctx.fillText('본문 이미지 또는 내 사진을 선택하세요',360,630);
  }

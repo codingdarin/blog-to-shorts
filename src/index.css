@@ -19,3 +19,12 @@ body{margin:0}button,input,textarea{font:inherit}button{cursor:pointer}button:di
 #warnings:empty{display:none}#warnings{color:#52525b;font-size:12px;line-height:1.7;background:#f4f4f5;border-radius:8px;padding:12px}#source{font-size:12px;color:#2563eb;text-decoration:underline}#photo-credits:empty{display:none}
 .check{width:16px;height:16px;accent-color:#18181b;flex-shrink:0}.preview-canvas{display:block;width:100%;border-radius:14px;background:#000}.preview-grid{background-color:#f4f4f5;background-image:radial-gradient(#d4d4d8 .7px,transparent .7px);background-size:12px 12px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media(min-width:1024px){
+ #root{height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+ #root>header{flex-shrink:0}
+ .studio-main{flex:1;min-height:0;display:flex;flex-direction:column;padding-top:20px;padding-bottom:12px}
+ .studio-intro{flex-shrink:0;margin-bottom:20px}
+ .studio-columns{flex:1;min-height:0;align-items:stretch;overflow:hidden}
+ .editor-scroll,.preview-scroll{min-height:0;height:100%;overflow-y:auto;overscroll-behavior-y:contain;scrollbar-gutter:stable;padding-right:8px;padding-bottom:8px}
+ .studio-main>footer{flex-shrink:0;margin-top:12px;padding-top:12px}
+}

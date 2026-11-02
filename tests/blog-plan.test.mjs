@@ -8,21 +8,33 @@ test('plan uses full text and actual images, preserves 4–6 scenes and CTA',asy
 });
 test('rejects invalid counts, lengths, tone, images and malformed AI scenes',async()=>{
  for(const patch of [{sceneCount:3},{sceneCount:7},{duration:20},{duration:61},{tone:'__proto__'},{text:'짧음'},{photos:[{id:'1',dataUrl:'https://example.com/a.png'}]}])assert.throws(()=>validatePlanInput({...input,...patch}));
- for(const change of [d=>d.scenes.pop(),d=>d.scenes[0].photoId='unknown',d=>d.scenes[4].role='body',d=>d.scenes[1].text='요'.repeat(161)])await assert.rejects(planBlog(input,async()=>{const d=draft(5);change(d);return d;}),/형식/);
+ for(const change of [d=>d.scenes.pop(),d=>d.scenes[0].photoId='unknown',d=>d.scenes[1].text='요'.repeat(161)])await assert.rejects(planBlog(input,async()=>{const d=draft(5);change(d);return d;}),/형식/);
 });
 test('text-only generation uses empty photo IDs without inventing images',async()=>{
  const r=await planBlog({...input,photos:[]},async(prompt,schema)=>{assert.deepEqual(schema.properties.scenes.items.properties.photoId.enum,['']);const d=draft(5);d.scenes.forEach(s=>s.photoId='');return d;});assert.equal(r.scenes[0].photoId,'');
 });
 test('repairs misplaced CTA and formal narration together, once',async()=>{
  let calls=0;
- const result=await planBlog(input,async prompt=>{calls++;const d=draft(5);if(calls===1){d.scenes[2].role='cta';d.scenes[3].text='답안을 작성하고 내용을 점검합니다.';}else{assert.match(prompt,/장면 3의 role은 body/);assert.match(prompt,/장면 4 해요체 오류/);assert.match(prompt,/초안이 검증에 실패/);}return d;});
+ const result=await planBlog(input,async prompt=>{calls++;const d=draft(5);if(calls===1){d.scenes[2].role='cta';d.scenes[3].text='답안을 작성하고 내용을 점검합니다.';}else{assert.match(prompt,/장면 4 해요체 오류/);assert.match(prompt,/초안이 검증에 실패/);}return d;});
  assert.equal(calls,2);assert.equal(result.scenes[2].role,'body');
 });
 test('failed plan repair stops after two calls and identifies the invalid scene',async()=>{
- let calls=0;await assert.rejects(planBlog(input,async()=>{calls++;const d=draft(5);d.scenes[2].role='cta';return d;}),/장면 3의 role은 body/);assert.equal(calls,2);
+ let calls=0;await assert.rejects(planBlog(input,async()=>{calls++;const d=draft(5);d.scenes[2].photoId='unknown';return d;}),/장면 3의 이미지 ID/);assert.equal(calls,2);
+});
+
+test('scene positions determine roles without another AI request',async()=>{
+ let calls=0;const result=await planBlog(input,async()=>{calls++;const d=draft(5);d.scenes.forEach(s=>s.role='cta');return d;});assert.equal(calls,1);assert.deepEqual(result.scenes.map(s=>s.role),['hook','body','body','body','cta']);
 });
 test('provider failures are not retried as malformed drafts',async()=>{
  let calls=0;await assert.rejects(planBlog(input,async()=>{calls++;throw Error('API 429');}),/API 429/);assert.equal(calls,1);
+});
+
+test('review and shorts prompts differ, and dubbing speed changes the script budget',async()=>{
+ for(const [tone,speed,expected] of [['review',1.5,/이용자 후기/],['shorts',2,/인사나 배경 설명 없이/]]){
+  await planBlog({...input,tone,speed},async prompt=>{assert.match(prompt,expected);assert.ok(prompt.includes(`더빙 속도는 ${speed}배`));assert.ok(prompt.includes(`${Math.round(45*5*speed)}~${Math.round(45*6*speed)}자`));if(tone==='review')assert.match(prompt,/실제 후기가 없음을 warnings/);return draft(5);});
+ }
+ for(const speed of [0,.85,1.3,'2',null])assert.throws(()=>validatePlanInput({...input,speed}),/더빙 속도/);
+ assert.throws(()=>validatePlanInput({...input,tone:'blog'}),/콘텐츠 톤/);
 });
 test('both provider payloads carry image bytes, not only captions',async()=>{
  const saved={fetch:globalThis.fetch,nvidia:process.env.NVIDIA_API_KEY,gemini:process.env.GEMINI_API_KEY,confirmed:process.env.AI_FREE_TIER_CONFIRMED};
