@@ -1,11 +1,12 @@
 {
-  "name": "local-shorts",
+  "name": "blog-to-shorts",
   "version": "1.0.0",
-  "description": "Local news to vertical shorts",
+  "description": "Blog content and images to 30–60 second vertical shorts",
   "main": "index.js",
   "scripts": {
     "start": "node server.mjs",
-    "check": "node --check server.mjs && node --check src/workflow.js && tsc --noEmit",
+    "check": "node --check server.mjs && node --check blog.mjs && node --check ai.mjs && node --check render.mjs && node --check timing.mjs && node --check src/workflow.js && tsc --noEmit",
+    "test": "node --test tests/*.test.mjs",
     "build": "vite build",
     "prestart": "npm run build"
   },

@@ -4,7 +4,7 @@ export const licensedTracks=[
  {id:'lunar',name:'Chinese Lunar New Year',credit:'ViacheslavStarostin',pageUrl:'https://pixabay.com/music/china-chinese-lunar-new-year-465871/'},
  {id:'swing',name:'Bring Back the Swing (Upbeat Jazz)',credit:'EvolvingVibes',pageUrl:'https://pixabay.com/music/traditional-jazz-bring-back-the-swing-upbeat-jazz-617230/'}
 ].map(t=>({...t,license:'Pixabay Content License',licenseUrl:'https://pixabay.com/service/license-summary/',contentId:true,file:`local-data/music/${t.id}.mp3`,preview:`local-data/music/${t.id}-preview.mp3`,url:`/api/music/${t.id}`}));
-export const musicCatalog=[...licensedTracks.filter(t=>existsSync(t.file)&&existsSync(t.preview)),{id:'light',name:'라이트 비트',credit:'동네컷 자체 합성',license:'자유 사용',url:'/api/music/light'}, {id:'none',name:'브금 없음',credit:'',license:''}];
+export const musicCatalog=[...licensedTracks.filter(t=>existsSync(t.file)&&existsSync(t.preview)),{id:'light',name:'라이트 비트',credit:'블로그 투 쇼츠 자체 합성',license:'자유 사용',url:'/api/music/light'}, {id:'none',name:'브금 없음',credit:'',license:''}];
 const rate=24000;
 export function musicWav(duration=16,{music='light',volume=.16,sfx=false,cuts=[]}={}){
  if(!musicCatalog.some(m=>m.id===music))throw Error('등록되지 않은 브금입니다.');

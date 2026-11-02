@@ -20,7 +20,7 @@ export async function elevenOptions(request=elevenRequest){
 let generating=false;
 export async function generateElevenScenes(texts,voiceId,saveAudio,optionsLoader=elevenOptions,request=elevenRequest){
  if(generating)throw Error('ElevenLabs 음성을 생성 중입니다. 완료 후 다시 시도해 주세요.');
- if(!Array.isArray(texts)||texts.length!==4||texts.some(t=>typeof t!=='string'||!t.trim()||t.length>100))throw Error('음성 대본 4개를 확인하세요.');
+ if(!Array.isArray(texts)||texts.length<4||texts.length>6||texts.some(t=>typeof t!=='string'||!t.trim()||t.length>160))throw Error('음성 대본 4~6개를 확인하세요.');
  generating=true;
  try{
   const account=await optionsLoader();
