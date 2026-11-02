@@ -19,16 +19,15 @@ export function downloadText(text,name,type='text/plain'){
 }
 export function drawFrame(canvas,{headline,scene,photos,source,index=0,count=5}){
  const ctx=canvas.getContext('2d');ctx.fillStyle='#0b1220';ctx.fillRect(0,0,720,1280);ctx.textAlign='center';
- ctx.fillStyle='#93c5fd';ctx.font='22px "Malgun Gothic",sans-serif';ctx.fillText('BLOG TO SHORTS',360,65);
- function fit(text,maxWidth,maxLines,startSize,minSize){
+ function fit(text,maxWidth,maxLines,startSize,minSize,breakWords=true){
   let size=startSize,rows=[];
-  do{ctx.font=`bold ${size}px "Malgun Gothic",sans-serif`;rows=balancedLines(text,t=>ctx.measureText(t).width,maxWidth);if(rows.length<=maxLines||size<=minSize)break;size-=2;}while(true);
+  do{ctx.font=`bold ${size}px "Malgun Gothic",sans-serif`;rows=balancedLines(text,t=>ctx.measureText(t).width,maxWidth,{breakWords});if((rows.length<=maxLines&&rows.every(row=>ctx.measureText(row).width<=maxWidth))||size<=minSize)break;size-=2;}while(true);
   return {size,rows};
  }
- const title=fit((headline||'블로그의 지식을 한 편의 쇼츠로').replaceAll('|',' '),630,3,46,28);
- ctx.fillStyle='#fff';title.rows.forEach((line,i)=>ctx.fillText(line,360,135+i*(title.size+10)));
+ // Shrink long titles instead of splitting a word; emphasize the second line.
+ const title=fit((headline||'블로그의 지식을 한 편의 쇼츠로').replaceAll('|',' '),630,2,46,2,false);
+ title.rows.forEach((line,i)=>{ctx.fillStyle=i===1?'#facc15':'#fff';ctx.fillText(line,360,135+i*(title.size+10));});
  const photo=photos.find(p=>p.id===scene?.photoId);
- ctx.fillStyle='#17243a';ctx.fillRect(50,305,620,600);
  if(photo){
   // Contain educational diagrams and screenshots so text is not cropped away.
   const ratio=Math.min(620/photo.image.width,600/photo.image.height),w=photo.image.width*ratio,h=photo.image.height*ratio;
@@ -42,5 +41,5 @@ export function drawFrame(canvas,{headline,scene,photos,source,index=0,count=5})
  ctx.font='18px "Malgun Gothic",sans-serif';ctx.fillStyle='#94a3b8';
  ctx.fillText(String(source||'직접 입력한 콘텐츠').slice(0,42),360,1218);
  if(photo)ctx.fillText(`이미지: ${String(photo.artist||'직접 업로드').slice(0,32)}`,360,1245);
- ctx.textAlign='right';ctx.fillText(`${index+1} / ${count}`,675,65);ctx.textAlign='left';
+ ctx.textAlign='left';
 }

@@ -1,7 +1,7 @@
 // Keep words intact and balance the rendered widths across the fewest lines.
-export function balancedLines(text, measure, maxWidth) {
+export function balancedLines(text, measure, maxWidth, {breakWords=true}={}) {
  const words=text.trim().split(/\s+/).filter(Boolean);
- const splitCharacters=words.some(word=>measure(word)>maxWidth);
+ const splitCharacters=breakWords&&words.some(word=>measure(word)>maxWidth);
  const tokens=splitCharacters?Array.from(text.trim()):words;
  const separator=splitCharacters?'':' ';
  if(!tokens.length)return [];
