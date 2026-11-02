@@ -15,7 +15,7 @@ test('text-only generation uses empty photo IDs without inventing images',async(
 });
 test('repairs misplaced CTA and formal narration together, once',async()=>{
  let calls=0;
- const result=await planBlog(input,async prompt=>{calls++;const d=draft(5);if(calls===1){d.scenes[2].role='cta';d.scenes[3].text='답안을 작성하고 내용을 점검합니다.';}else{assert.match(prompt,/장면 4 해요체 오류/);assert.match(prompt,/초안이 검증에 실패/);}return d;});
+ const result=await planBlog(input,async prompt=>{calls++;const d=draft(5);if(calls===1){d.scenes[2].role='cta';d.scenes[3].text='답안을 작성하고 내용을 점검하였다.';}else{assert.match(prompt,/장면 4 해요체 오류/);assert.match(prompt,/초안이 검증에 실패/);}return d;});
  assert.equal(calls,2);assert.equal(result.scenes[2].role,'body');
 });
 test('failed plan repair stops after two calls and identifies the invalid scene',async()=>{
@@ -60,8 +60,25 @@ test('few-shot course examples apply only to shorts and keep grounded output rul
 
 test('AI progress reports actual response and repair milestones without early completion',async()=>{
  const seen=[];let calls=0;
- await planBlog(input,async()=>{calls++;const d=draft(5);if(calls===1)d.scenes[1].text='내용을 확인합니다.';return d;},(percent,label)=>seen.push({percent,label}));
+ await planBlog(input,async()=>{calls++;const d=draft(5);if(calls===1)d.scenes[1].text='오늘 배운 내용을 확인하였다.';return d;},(percent,label)=>seen.push({percent,label}));
  assert.deepEqual(seen.map(p=>p.percent),[10,25,75,85,95,98]);assert.match(seen[3].label,/교정/);
  const failed=[];await assert.rejects(planBlog(input,async()=>{throw Error('API unavailable');},p=>failed.push(p)),/unavailable/);
  assert.deepEqual(failed,[10,25]);
+});
+
+
+test('education and shorts normalize the reported formal ending without another AI call',async()=>{
+ for(const tone of ['education','shorts']){
+  let calls=0;const seen=[];
+  const result=await planBlog({...input,tone},async()=>{calls++;const d=draft(5);d.scenes[4].text='모두 좋은 결과를 얻으시길 바랍니다.';return d;},p=>seen.push(p));
+  assert.equal(calls,1);assert.equal(result.scenes[4].text,'모두 좋은 결과를 얻으시길 바라요.');
+  assert.equal(result.scenes[4].photoId,'1');assert.match(result.warnings.at(-1),/장면 5/);
+  assert.deepEqual(seen,[10,25,75,98]);
+ }
+});
+
+test('formal ending in the repair response is polished before final validation',async()=>{
+ let calls=0;
+ const result=await planBlog(input,async()=>{calls++;const d=draft(5);d.scenes[4].text=calls===1?'배운 내용을 다시 확인하였다.':'모두 좋은 결과를 얻으시길 바랍니다.';return d;});
+ assert.equal(calls,2);assert.equal(result.scenes[4].text,'모두 좋은 결과를 얻으시길 바라요.');
 });

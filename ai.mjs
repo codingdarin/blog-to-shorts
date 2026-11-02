@@ -17,6 +17,11 @@ export function narrationStyleIssues(texts){
   return sentences.filter(s=>!/(?:요|죠)[.!?。！？…\s"'”’)]*$/.test(s)||/(?:습니다|합니다|입니다|하였다|되었다|열렸다|열린다|개최된다|예정이다|것이다)[.!?,。！？…\s]/.test(s)).map(s=>`장면 ${i+1}: ${s}`);
  });
 }
+// Only known sentence-final forms: preserve facts, tense, names, and the rest of the text.
+export function normalizeNarrationEndings(text){
+ const endings={바랍니다:'바라요',합니다:'해요',됩니다:'돼요',있습니다:'있어요',없습니다:'없어요',좋습니다:'좋아요'};
+ return text.replace(/(바랍니다|합니다|됩니다|있습니다|없습니다|좋습니다)(?=[.!?。！？…"'”’)]|\s*$)/g,ending=>endings[ending]);
+}
 export async function styledGeneration(prompt,schema,textsOf,validate,generate=callAI){
  let result=await generate(prompt+'\n'+NARRATION_STYLE,schema);validate(result);
  const issues=narrationStyleIssues(textsOf(result));
@@ -100,9 +105,17 @@ ${input.tone==='shorts'?SHORTS_GUIDE:''}
   onProgress(attempt?95:75,attempt?'교정된 대본을 다시 검사하고 있어요.':'장면 수·이미지 연결·문구·말투를 검사하고 있어요.');
   // Scene positions define their roles; do not spend a repair call correcting redundant tags.
   if(Array.isArray(result?.scenes)&&result.scenes.length===input.sceneCount)result.scenes.forEach((scene,i)=>{if(scene&&typeof scene==='object')scene.role=i===0?'hook':i===input.sceneCount-1?'cta':'body';});
+  const polished=[];
+  if(Array.isArray(result?.scenes))result.scenes.forEach((scene,i)=>{
+   if(typeof scene?.text==='string'){
+    const text=normalizeNarrationEndings(scene.text);
+    if(text!==scene.text){scene.text=text;polished.push(i+1);}
+   }
+  });
+  if(polished.length&&Array.isArray(result.warnings)&&result.warnings.every(w=>typeof w==='string'))result.warnings.push(`장면 ${polished.join(', ')}의 격식체 어미를 해요체로 다듬었어요.`);
   issues=planIssues(result,input.sceneCount,ids);
   if(!issues.length){onProgress(98,'검사를 마친 대본을 편집 화면으로 보내고 있어요.');return result;}
-  feedback='아래 초안이 검증에 실패했어요. 새 정보를 추가하지 말고 지적된 모든 오류를 교정해 동일한 JSON 구조로 출력하세요. 첫 장면만 hook, 마지막 장면만 cta, 그 사이는 모두 body여야 해요. 중간에 마무리 문구를 넣지 말고 설명 흐름을 이어가세요. 모든 낭독 문장을 해요체로 바꾸고 초안의 사실과 이미지 ID를 보존하세요. 예: 좋습니다 → 좋아요, 필요합니다 → 필요해요, 도움이 됩니다 → 도움이 돼요, 중요합니다 → 중요해요. 지적된 문장을 수정 없이 복사하면 안 돼요. 각 문장의 마지막이 요 또는 죠인지 확인하세요.\n'+JSON.stringify({draft:result,issues});
+  feedback='아래 초안이 검증에 실패했어요. 새 정보를 추가하지 말고 지적된 모든 오류를 교정해 동일한 JSON 구조로 출력하세요. 첫 장면만 hook, 마지막 장면만 cta, 그 사이는 모두 body여야 해요. 중간에 마무리 문구를 넣지 말고 설명 흐름을 이어가세요. 모든 낭독 문장을 해요체로 바꾸고 초안의 사실과 이미지 ID를 보존하세요. 예: 좋습니다 → 좋아요, 필요합니다 → 필요해요, 도움이 됩니다 → 도움이 돼요, 중요합니다 → 중요해요, 얻으시길 바랍니다 → 얻으시길 바라요. 지적된 문장을 수정 없이 복사하면 안 돼요. 각 문장의 마지막이 요 또는 죠인지 확인하세요.\n'+JSON.stringify({draft:result,issues});
  }
  throw Error('AI 대본 형식·문체를 한 번 교정했지만 검증에 실패했어요. '+issues.join(' / '));
 }
