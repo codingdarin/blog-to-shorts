@@ -6,6 +6,7 @@ import {planBlog,validatePlanInput,narrationStyleIssues} from './ai.mjs';
 import {elevenOptions} from './elevenlabs.mjs';
 import {renderVideo} from './render.mjs';
 import {narrationSpeed} from './timing.mjs';
+import {videoFilename,videoDisposition} from './download-name.mjs';
 import {musicCatalog,defaultMusicId} from './music.mjs';
 try { process.loadEnvFile(); } catch {}
 const port=Number(process.env.PORT||4311),host=process.env.HOST||'127.0.0.1';
@@ -32,9 +33,9 @@ http.createServer(async(req,res)=>{try{
  }
  if(req.method==='GET'&&url.pathname==='/api/music')return json(res,200,{tracks:musicCatalog.map(({file,preview,...rest})=>rest),defaultId:defaultMusicId});
  if(req.method==='GET'&&url.pathname.startsWith('/api/music/')){const track=musicCatalog.find(t=>t.id===url.pathname.split('/').pop());if(track?.preview){const bytes=await readFile(track.preview);res.writeHead(200,{'Content-Type':'audio/mpeg','Content-Length':bytes.length});res.end(bytes);return;}}
- if(req.method==='GET'&&url.pathname.startsWith('/api/video/')){const video=downloads.get(url.pathname.slice('/api/video/'.length));if(!video)return json(res,404,{error:'다운로드 시간이 만료됐어요. 영상을 다시 만들어 주세요.'});res.writeHead(200,{'Content-Type':'video/mp4','Content-Length':video.length,'Content-Disposition':'attachment; filename=blog-short.mp4'});res.end(video);return;}
+ if(req.method==='GET'&&url.pathname.startsWith('/api/video/')){const video=downloads.get(url.pathname.slice('/api/video/'.length));if(!video)return json(res,404,{error:'다운로드 시간이 만료됐어요. 영상을 다시 만들어 주세요.'});res.writeHead(200,{'Content-Type':'video/mp4','Content-Length':video.bytes.length,'Content-Disposition':videoDisposition(video.filename)});res.end(video.bytes);return;}
  if(req.method==='POST'&&url.pathname==='/api/render'){
-  const {frames,texts,duration=45,voice=true,audio={music:'none',volume:.12,sfx:false},tts={provider:'local'},motionLayers=[]}=await body(req);
+  const {headline,frames,texts,duration=45,voice=true,audio={music:'none',volume:.12,sfx:false},tts={provider:'local'},motionLayers=[]}=await body(req);
   if(!Number.isInteger(duration)||duration<30||duration>60)return json(res,400,{error:'목표 길이는 30~60초로 선택해 주세요.'});
   if(typeof voice!=='boolean'||!['local','elevenlabs'].includes(tts?.provider))return json(res,400,{error:'내레이션 설정을 확인해 주세요.'});
   try{narrationSpeed(tts.speed);}catch(error){return json(res,400,{error:error.message});}
@@ -53,8 +54,8 @@ http.createServer(async(req,res)=>{try{
   try{rendered=await renderVideo(frames,texts,voice,audio,tts,duration,(percent,label)=>{if(streaming)send({type:'progress',percent,label});},motionLayers);}
   catch(error){if(streaming){send({type:'error',error:error.message});res.end();return;}throw error;}
   finally{renderBusy=false;if(heartbeat)clearInterval(heartbeat);}
-  const videoId=randomUUID();while(downloads.size>=3)downloads.delete(downloads.keys().next().value);downloads.set(videoId,rendered.video);setTimeout(()=>downloads.delete(videoId),15*60*1000).unref();
-  const result={videoUrl:`/api/video/${videoId}`,duration:rendered.duration,subtitles:rendered.subtitles,requestedSpeed:rendered.requestedSpeed,narrationSpeed:rendered.narrationSpeed};
+  const videoId=randomUUID(),filename=videoFilename(headline);while(downloads.size>=3)downloads.delete(downloads.keys().next().value);downloads.set(videoId,{bytes:rendered.video,filename});setTimeout(()=>downloads.delete(videoId),15*60*1000).unref();
+  const result={filename,videoUrl:`/api/video/${videoId}`,duration:rendered.duration,subtitles:rendered.subtitles,requestedSpeed:rendered.requestedSpeed,narrationSpeed:rendered.narrationSpeed};
   if(streaming){send({type:'complete',result});res.end();return;}
   return json(res,200,result);
  }

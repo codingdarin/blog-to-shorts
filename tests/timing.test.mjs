@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {sceneDurations,srtSubtitles,narrationSpeed,narrationBudget,fittedNarrationSpeed,tempoFilter} from '../timing.mjs';
 test('overlong narration speeds up without cutting words or losing subtitle time',()=>{
- for(const count of [4,5,6])for(const speed of [1,1.5,1.75,2]){
+ for(const count of [4,5,6])for(const speed of [1,1.25,1.5,1.75,2]){
   const speech=Array(count).fill(17),fitted=fittedNarrationSpeed(speech,speed);
   assert.ok(fitted>speed);
   const durations=sceneDurations(Array(count).fill('설명이에요.'),speech.map(s=>s*speed/fitted),45);
@@ -13,6 +13,7 @@ test('overlong narration speeds up without cutting words or losing subtitle time
 });
 test('speed defaults for existing clients and text budget stays within scene capacity',()=>{
  assert.equal(narrationSpeed(),1);
+ assert.equal(narrationSpeed(1.25),1.25);
  assert.ok(narrationBudget(45,1).max<narrationBudget(45,2).max);
  assert.ok(narrationBudget(60,2,4).max<=4*160);
  for(const speed of [NaN,Infinity,null,'1',0,-1,10])assert.throws(()=>narrationSpeed(speed),/더빙 속도/);

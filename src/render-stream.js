@@ -2,7 +2,7 @@
 /**
  * @param {Response} response
  * @param {(event: {percent:number,label:string}) => void} onProgress
- * @returns {Promise<{videoUrl:string,duration:number,subtitles:string,requestedSpeed?:number|null,narrationSpeed?:number|null}>}
+ * @returns {Promise<{videoUrl:string,duration:number,subtitles:string,filename:string,requestedSpeed?:number|null,narrationSpeed?:number|null}>}
  */
 export async function readRenderStream(response,onProgress){
  if(!response.ok){const data=await response.json();throw Error(data.error||'영상 생성 요청에 실패했어요.');}

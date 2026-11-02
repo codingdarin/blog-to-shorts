@@ -1,6 +1,6 @@
-export const NARRATION_SPEEDS=[1,1.5,1.75,2];
+export const NARRATION_SPEEDS=[1,1.25,1.5,1.75,2];
 export function narrationSpeed(value=1){
- if(!NARRATION_SPEEDS.includes(value))throw Error('더빙 속도는 1·1.5·1.75·2배 중에서 선택해 주세요.');
+ if(!NARRATION_SPEEDS.includes(value))throw Error('더빙 속도는 1·1.25·1.5·1.75·2배 중에서 선택해 주세요.');
  return value;
 }
 export function narrationBudget(duration,speed=1,sceneCount=5){

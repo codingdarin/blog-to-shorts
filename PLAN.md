@@ -98,3 +98,26 @@
 - 실제 8초 음원의 속도 검증: 1배 8.000초, 1.5배 5.333초, 1.75배 4.576초, 2배 4.009초. local-data/speed-verification.json.
 - 60초를 넘는 별도 긴 대본을 무료 Windows TTS로 검증했다. 선택 1배 → 자동 1.7배 → 59.5초 완성. local-data/autofit-local-verified.mp4 및 autofit-verification.json. 추가 ElevenLabs 크레딧은 사용하지 않았다.
 - 최종 테스트 41개, 구문·TypeScript·빌드 통과. 사진 가장자리 보존·방향 전환, 속도 유효성·분량 예산, 초과 길이 자동 배속, 새 톤 프롬프트를 검증했다. UI 증빙: local-data/shorts-settings-ui.png, shorts-motion-ui.png. 모든 테스트 산출물은 Git 제외 경로다.
+
+## 스크롤·1.25배속·다운로드 이름·미리보기 슬라이더 — 2026-11-02 KST
+
+- 사용자 요청: 데스크톱 스크롤바를 좌우 패널 두 개로 정리, 1.25배속 추가, 파일명 YYMMDD_영상제목.mp4, 장면 미리보기 재생 버튼을 슬라이더로 교체.
+- 현재 검증 브라우저에서는 문서 초과 높이가 재현되지 않았으나 html/body 스크롤은 허용되어 있었다. 1024px 이상에서 html/body의 높이와 overflow를 명시적으로 제한했다. 모바일 세로 흐름은 유지한다.
+- 속도 선택·서버 입력 검증·대본 분량 예산에 1.25배를 추가했다. 기존 1·1.5·1.75·2배와 자동 길이 맞춤을 유지한다.
+- 영상 생성 완료 시 한국 날짜와 영상 제목으로 파일명을 확정한다. 금지 문자·제어 문자를 제거하고 빈 제목은 블로그투쇼츠를 사용한다. HTTP Content-Disposition UTF-8 파일명과 HTML download를 일치시켰으며 SRT도 같은 기본 이름을 사용한다.
+- shadcn 방식의 Radix Slider로 전체 장면 시점을 탐색한다. 장면 번호·예상 초를 표시하고 선택 시 사진 움직임의 위치와 활성 장면이 함께 바뀐다. 장면 편집/선택은 해당 장면 시작으로 이동한다. 합성 전 균등 분배한 예상 시점임을 명시하고 완성 MP4 재생 컨트롤은 유지한다.
+- 테스트 43개 통과, 구문·TypeScript 검사와 프로덕션 빌드 통과. 최초 타입 검사에서 스트림 응답의 filename 선언 누락을 발견해 보완한 뒤 재검사 통과.
+- 실제 브라우저: 1.25배 선택, 슬라이더 Home/End 및 20초→3/5장면 확인. html/body/root 높이·scrollHeight 모두 720, overflow hidden, 좌우 패널은 auto. 좌측 scrollTop 2318→1598일 때 우측 419 유지, 페이지 0. 후속 좌측158/우측275에서도 페이지0.
+- 실제 수동 테스트 문구 5장면, 음성·BGM 없음으로 45초 합성. 다운로드 HTTP 200, UTF-8 파일명 261102_건설기사 공부법.mp4, 651296바이트 저장 확인(local-data/261102_건설기사 공부법.mp4). 신규 AI/유료 TTS 호출 없음. 기존 작업 탭은 새로고침하지 않았으며 이전 검증 영상 shorts-motion-1.5x.mp4도 로컬에 보존했다. 새 서버 적용으로 이전 메모리 다운로드 링크는 만료된다.
+- 화면 증빙: local-data/slider-scroll-speed-ui.png. 이전에 열린 UI는 새로고침해야 수정이 적용되며 새로고침하면 현재 초안은 초기화된다.
+
+## 강의 홍보용 쇼츠 템플릿 조사 / 제안 — 2026-11-02 KST
+
+- 현재 요청은 조사·리스트업이다. 아래 템플릿과 퓨샷은 아직 프롬프트에 적용하지 않았다. 현재 인기 순위나 전환율 검증 결과로 해석하지 않는다.
+- TikTok 교육 마케팅 가이드: 학습자 고민/목표, 짧은 튜토리얼·강의 미리보기·실제 수강생 경험, 실제 근거가 있는 모집 정보 중심. https://ads.tiktok.com/business/en/guides/education-marketing-guide?redirected=1
+- Google Shorts 광고 가이드(2024-04-17): 피드에 어울리는 친근한 크리에이터 말투, 시청자에게 직접 말하기, 경쾌한 전개. https://blog.google/products/ads-commerce/youtube-shorts-ads-select-lineups-abcds/
+- TikTok 교육 플레이북(2024): personal success / teacher voice / student voice, 실제 수업·일상 등. https://ads.tiktok.com/business/library/TikTokSMB_Education_Playbook2024.pdf
+- Haufe Akademie 사례: 공감할 대화 주제와 유용한 학습 정보 결합. https://ads.tiktok.com/business/en/inspiration/haufe-akademie-tiktok-success-story?redirected=1
+- Stepful 사례: 실제 수강생 후기·프로그램 설명·학습 일상 활용. https://ads.tiktok.com/business/en-US/inspiration/small-business-stepful-uses-lead-generation-to-reach-prospects
+- 위 방향을 한국어 강의 홍보에 적용한 제안: (1) 고민 진단형: 막히는 지점→원인→짧은 해결법→강의 연결, (2) 통념 반전형: 흔한 믿음→근거 있는 교정→실제 예시→관련 강의, (3) 미니 문제풀이형: 원문 문제→생각할 틈→풀이 한 단계→전체 강의, (4) 3단계 학습 루트형: 목표→순서 3개→막히는 단계→커리큘럼, (5) 수강 대상 선별형: 대상 질문→해당 조건→수업 구성→상세 확인, (6) FAQ형: 실제 망설임→구체적 답→조건 확인→강의 안내, (7) 후기·공부 루틴형: 원문 실제 경험→도움된 기능→사용 모습→후기/강의 확인.
+- 우선 퓨샷 제안은 고민 진단/미니 문제풀이/대상 선별 3종의 입력 사실→5장면 완성 예시. 단순히 '트렌디하게'라고 지시하기보다 훅/문장 길이/강의 연결/CTA를 예시로 고정하고 글의 근거에 따라 한 형식을 고른다. 원문에 없는 후기, 합격 보장, 할인, 마감, 수강 링크 위치는 만들지 않는다.
