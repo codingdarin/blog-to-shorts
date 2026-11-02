@@ -13,6 +13,17 @@ test('rejects invalid counts, lengths, tone, images and malformed AI scenes',asy
 test('text-only generation uses empty photo IDs without inventing images',async()=>{
  const r=await planBlog({...input,photos:[]},async(prompt,schema)=>{assert.deepEqual(schema.properties.scenes.items.properties.photoId.enum,['']);const d=draft(5);d.scenes.forEach(s=>s.photoId='');return d;});assert.equal(r.scenes[0].photoId,'');
 });
+test('repairs misplaced CTA and formal narration together, once',async()=>{
+ let calls=0;
+ const result=await planBlog(input,async prompt=>{calls++;const d=draft(5);if(calls===1){d.scenes[2].role='cta';d.scenes[3].text='답안을 작성하고 내용을 점검합니다.';}else{assert.match(prompt,/장면 3의 role은 body/);assert.match(prompt,/장면 4 해요체 오류/);assert.match(prompt,/초안이 검증에 실패/);}return d;});
+ assert.equal(calls,2);assert.equal(result.scenes[2].role,'body');
+});
+test('failed plan repair stops after two calls and identifies the invalid scene',async()=>{
+ let calls=0;await assert.rejects(planBlog(input,async()=>{calls++;const d=draft(5);d.scenes[2].role='cta';return d;}),/장면 3의 role은 body/);assert.equal(calls,2);
+});
+test('provider failures are not retried as malformed drafts',async()=>{
+ let calls=0;await assert.rejects(planBlog(input,async()=>{calls++;throw Error('API 429');}),/API 429/);assert.equal(calls,1);
+});
 test('both provider payloads carry image bytes, not only captions',async()=>{
  const saved={fetch:globalThis.fetch,nvidia:process.env.NVIDIA_API_KEY,gemini:process.env.GEMINI_API_KEY,confirmed:process.env.AI_FREE_TIER_CONFIRMED};
  try{process.env.AI_FREE_TIER_CONFIRMED='true';
