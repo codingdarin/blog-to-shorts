@@ -43,6 +43,7 @@ async def test_tones_fewshot_and_ending_normalization(tone):
     assert result['warnings']
     for example in PROMPTS['shortsExamples']:
         assert not narration_style_issues(example['texts'])
+        assert all('원문' not in text and 10 <= len(text) <= 160 for text in example['texts'])
 
 
 async def test_one_repair_progress_and_failure_limit():
@@ -55,6 +56,7 @@ async def test_one_repair_progress_and_failure_limit():
     await plan_blog(INPUT,generate=generate,progress=lambda p,l:events.append(p))
     assert len(calls)==2 and events==[10,25,75,85,95,98]
     assert '해요체 오류' in calls[1]
+    assert calls[0] in calls[1]
     calls.clear()
     async def broken(prompt,schema,images):
         calls.append(prompt)
@@ -108,3 +110,56 @@ def test_narration_validation():
     assert not narration_style_issues(['2026년 10월 3일에 열렸어요. 중요하죠!'])
     assert normalize_endings('원문을 확인합니다. 교재가 있습니다!')=='원문을 확인해요. 교재가 있어요!'
     assert normalize_endings('확인합니다만 조건이 달라요.')=='확인합니다만 조건이 달라요.'
+
+
+@pytest.mark.parametrize('tone',['education','review','marketing','shorts'])
+@pytest.mark.parametrize('text',[
+    '원문에서 강의 구성을 확인해 보세요.',
+    '강의 구성을 살펴보세요. 자세한 조건은 원문에 나와 있어요.',
+])
+async def test_caption_wording_is_repaired_with_source_and_settings(tone,text):
+    source=dict(INPUT,tone=tone,sceneCount=4,duration=30,speed=2,
+                title='보고서 수업 안내',text='셀 입력이 가능한 학습자 대상이에요. 수강 기간은 30일이고 실습 파일은 별도 구매예요.')
+    calls=[]
+    async def generate(prompt,schema,images):
+        calls.append(prompt)
+        assert source['text'] in prompt and source['title'] in prompt
+        assert '30초' in prompt and '4개 장면' in prompt and '2배' in prompt
+        assert PROMPTS['tones'][tone] in prompt
+        assert images==source['photos']
+        assert schema['properties']['scenes']['minItems']==4
+        result=draft(4)
+        result['scenes'][-1]['text']=text if len(calls)==1 else '강의 구성과 실습 파일 구매 조건을 확인해 보세요.'
+        result['scenes'][-1]['reason']='원문의 수업 안내 이미지예요.'
+        result['warnings']=['원문에 가격은 없어 가격 안내를 생략했어요.']
+        return result
+    result=await plan_blog(source,generate=generate)
+    assert len(calls)==2 and calls[0] in calls[1]
+    assert "'원문'이라는 표현" in calls[1]
+    assert all('원문' not in scene['text'] for scene in result['scenes'])
+    assert result['scenes'][-1]['reason']=='원문의 수업 안내 이미지예요.'
+    assert result['warnings']==['원문에 가격은 없어 가격 안내를 생략했어요.']
+
+
+async def test_caption_wording_still_present_after_repair_is_rejected():
+    calls=[]
+    async def generate(prompt,schema,images):
+        calls.append(prompt)
+        result=draft()
+        result['scenes'][0]['text']='원문을 읽고 핵심 내용을 확인해 보세요.'
+        return result
+    with pytest.raises(ValueError,match="장면 1의 자막·낭독에는 '원문'"):
+        await plan_blog(INPUT,generate=generate)
+    assert len(calls)==2
+
+
+async def test_source_word_in_metadata_does_not_repair_or_rewrite_captions():
+    expected=draft()
+    expected['scenes'][0]['reason']='원문의 핵심 개념과 연결된 이미지예요.'
+    expected['warnings']=['원문에 없는 기간은 생략했어요.']
+    calls=[]
+    async def generate(prompt,schema,images):
+        calls.append(prompt)
+        return copy.deepcopy(expected)
+    assert await plan_blog(INPUT,generate=generate)==expected
+    assert len(calls)==1
