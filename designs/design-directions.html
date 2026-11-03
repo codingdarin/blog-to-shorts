@@ -1,0 +1,260 @@
+<style>
+#bts-design-explorations .bts-stage{min-height:800px;container-type:inline-size}
+#bts-design-explorations .bts-mock{--b-paper:#fff;--b-ink:#172033;--b-muted:#697587;--b-line:#e4e9f0;--b-soft:#f4f6fa;--b-accent:#395de8;--b-tint:#edf1ff;--b-radius:12px;color-scheme:light;background:var(--b-paper);color:var(--b-ink);font-family:Inter,'Segoe UI','Malgun Gothic',sans-serif;font-size:13px;line-height:1.55;min-height:700px;border:1px solid var(--b-line);border-radius:14px;overflow:hidden;box-sizing:border-box}
+#bts-design-explorations .bts-mock *{box-sizing:border-box;word-break:keep-all;overflow-wrap:anywhere}
+#bts-design-explorations .bts-mock h1,#bts-design-explorations .bts-mock h2,#bts-design-explorations .bts-mock h3,#bts-design-explorations .bts-mock p{margin:0;color:inherit}
+#bts-design-explorations .bts-mock h1{font-size:27px;line-height:1.35;letter-spacing:-1.3px;font-weight:750}
+#bts-design-explorations .bts-mock h2{font-size:19px;line-height:1.4;letter-spacing:-.6px;font-weight:700}
+#bts-design-explorations .bts-mock h3{font-size:14px;font-weight:650}
+#bts-design-explorations .bts-mock button,#bts-design-explorations .bts-mock input,#bts-design-explorations .bts-mock textarea,#bts-design-explorations .bts-mock select{font:inherit}
+#bts-design-explorations .bts-mock button{display:inline-flex;align-items:center;justify-content:center;gap:7px;color:inherit;background:transparent;border:0;border-radius:7px;padding:8px 11px;font-weight:600;text-align:left}
+#bts-design-explorations .bts-mock button:hover{background:var(--b-soft)}
+#bts-design-explorations .bts-mock button:focus-visible,#bts-design-explorations .bts-mock input:focus-visible,#bts-design-explorations .bts-mock textarea:focus-visible,#bts-design-explorations .bts-mock select:focus-visible{outline:2px solid var(--b-accent);outline-offset:3px}
+#bts-design-explorations .bts-mock .b-primary{background:var(--b-accent);color:#fff;min-height:38px;padding-inline:16px}
+#bts-design-explorations .bts-mock .b-primary:hover{filter:brightness(.94);background:var(--b-accent)}
+#bts-design-explorations .bts-mock .b-outline{background:var(--b-paper);border:1px solid var(--b-line)}
+#bts-design-explorations .bts-mock svg{width:16px;height:16px;flex-shrink:0}
+#bts-design-explorations .bts-mock .b-top{min-height:63px;display:flex;align-items:center;gap:20px;padding:13px 24px;border-bottom:1px solid var(--b-line);flex-wrap:wrap}
+#bts-design-explorations .bts-mock .b-brand{display:flex;align-items:center;gap:10px;font-weight:750;font-size:14px;letter-spacing:-.5px;white-space:nowrap}
+#bts-design-explorations .bts-mock .b-logo{display:grid;place-items:center;width:28px;height:28px;background:var(--b-accent);color:#fff;border-radius:7px}
+#bts-design-explorations .bts-mock .b-fill{flex:1;min-width:0}
+#bts-design-explorations .bts-mock .b-muted{color:var(--b-muted)}
+#bts-design-explorations .bts-mock .b-small{font-size:11px}
+#bts-design-explorations .bts-mock .b-eyebrow{font-size:11px;letter-spacing:1.7px;font-weight:650;text-transform:uppercase;color:var(--b-accent)}
+#bts-design-explorations .bts-mock .b-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#bts-design-explorations .bts-mock .b-between{justify-content:space-between}
+#bts-design-explorations .bts-mock .b-pill{font-size:11px;color:var(--b-accent);background:var(--b-tint);padding:4px 9px;border-radius:5px;white-space:nowrap}
+#bts-design-explorations .bts-mock .b-panel{border:1px solid var(--b-line);background:var(--b-paper);border-radius:var(--b-radius)}
+#bts-design-explorations .bts-mock .b-field{display:grid;gap:7px;min-width:0;font-size:12px;font-weight:600}
+#bts-design-explorations .bts-mock input,#bts-design-explorations .bts-mock textarea,#bts-design-explorations .bts-mock select{width:100%;min-width:0;color:var(--b-ink);background:var(--b-paper);border:1px solid var(--b-line);border-radius:7px;padding:10px 12px;line-height:1.7;font-weight:400}
+#bts-design-explorations .bts-mock textarea{resize:vertical;min-height:84px}
+#bts-design-explorations .bts-mock .b-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+#bts-design-explorations .bts-mock .b-sep{height:1px;background:var(--b-line);margin:20px 0}
+#bts-design-explorations .bts-mock .b-footer{display:flex;gap:14px;justify-content:space-between;align-items:center;padding:15px 24px;border-top:1px solid var(--b-line);font-size:11px;color:var(--b-muted);flex-wrap:wrap}
+#bts-design-explorations .bts-mock .b-poster{width:100%;max-width:218px;aspect-ratio:9/16;background:#e6edff;position:relative;isolation:isolate;overflow:hidden;border-radius:9px;display:flex;flex-direction:column;padding:20px 18px;color:#1b2745;box-shadow:0 12px 28px #20315218}
+#bts-design-explorations .bts-mock .b-poster:before{content:'';position:absolute;z-index:-1;width:220px;height:220px;border-radius:50%;background:#aac0ff;right:-90px;top:72px}
+#bts-design-explorations .bts-mock .b-poster-label{font-size:9px;letter-spacing:1.8px;font-weight:700}
+#bts-design-explorations .bts-mock .b-poster-title{font-size:30px;font-weight:800;letter-spacing:-1.8px;line-height:1.28;margin-top:22px}
+#bts-design-explorations .bts-mock .b-sheet{background:#fff;border:1px solid #dae0ec;box-shadow:0 9px 0 -5px #ffffffb0;padding:14px;transform:rotate(-5deg);margin-top:26px;min-height:90px;border-radius:5px}
+#bts-design-explorations .bts-mock .b-sheet .b-rule{height:5px;border-radius:2px;background:#d7dfef;margin-top:8px}
+#bts-design-explorations .bts-mock .b-sheet .b-rule:nth-child(2){width:70%;background:#809ce8}
+#bts-design-explorations .bts-mock .b-caption{font-size:13px;text-align:center;line-height:1.7;font-weight:700;background:#172033;color:#fff;padding:9px 8px;margin-top:auto;border-radius:4px;white-space:pre-line}
+#bts-design-explorations .bts-mock .b-video-wrap{display:grid;justify-items:center;gap:18px}
+#bts-design-explorations .bts-mock .b-transport{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;max-width:260px;font-size:11px;color:var(--b-muted)}
+#bts-design-explorations .bts-mock .b-transport button{border:1px solid var(--b-line);background:var(--b-paper);border-radius:50%;width:34px;height:34px;padding:7px;color:var(--b-ink)}
+#bts-design-explorations .bts-mock .b-scene-nav{display:flex;gap:8px;flex-wrap:wrap}
+#bts-design-explorations .bts-mock .b-scene-nav button{border:1px solid var(--b-line);font-size:11px;flex:1;min-width:60px;white-space:nowrap;background:var(--b-paper)}
+#bts-design-explorations .bts-mock .b-scene-nav button[aria-pressed=true]{border-color:var(--b-accent);background:var(--b-tint);color:var(--b-accent)}
+#bts-design-explorations .bts-mock .b-drawer{padding:18px 24px;background:var(--b-tint);border-top:1px solid var(--b-line)}
+#bts-design-explorations .bts-mock [hidden]{display:none!important}
+/* Focus: a quiet two-pane workspace with a narrow project rail. */
+#bts-design-explorations .b-focus-body{display:grid;grid-template-columns:164px minmax(0,1fr) 286px;min-height:579px}
+#bts-design-explorations .b-focus-rail{border-right:1px solid var(--b-line);background:#fafbfd;padding:26px 14px;display:flex;flex-direction:column;gap:9px}
+#bts-design-explorations .b-focus-rail .b-rail-item{display:flex;align-items:center;gap:9px;padding:10px;font-size:12px;color:var(--b-muted)}
+#bts-design-explorations .b-focus-rail .b-rail-item.is-active{color:var(--b-accent);background:var(--b-tint);border-radius:7px;font-weight:650}
+#bts-design-explorations .b-focus-editor{padding:28px;display:flex;flex-direction:column;gap:20px;min-width:0}
+#bts-design-explorations .b-focus-preview{border-left:1px solid var(--b-line);padding:24px;background:var(--b-soft);display:flex;flex-direction:column;gap:22px}
+#bts-design-explorations .b-focus-source{padding:13px 14px;display:flex;gap:10px;align-items:center;font-size:12px}
+#bts-design-explorations .b-focus-source svg{color:var(--b-accent)}
+/* Storyboard: scenes are the main navigation and editing surface. */
+#bts-design-explorations .b-board{--b-accent:#7451c6!important;--b-tint:#f1ecfb!important}
+#bts-design-explorations .b-board-main{padding:28px 30px;background:#f7f8fc;min-height:579px}
+#bts-design-explorations .b-board-scenes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:24px}
+#bts-design-explorations .b-mock-scene{border:1px solid var(--b-line);border-radius:10px;background:#fff;padding:10px;min-width:0}
+#bts-design-explorations .b-mock-scene.is-active{border-color:var(--b-accent);box-shadow:0 0 0 2px #7451c619}
+#bts-design-explorations .b-mock-scene>button{display:flex!important;width:100%;padding:0!important;flex-direction:column;align-items:stretch!important;border-radius:6px!important;gap:9px!important}
+#bts-design-explorations .b-scene-thumb{height:176px;border-radius:5px;padding:17px 14px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;background:#e9edff;color:#263559}
+#bts-design-explorations .b-scene-thumb strong{font-size:22px;line-height:1.35;letter-spacing:-1px;font-weight:750}
+#bts-design-explorations .b-scene-thumb small{font-size:10px;letter-spacing:1px}
+#bts-design-explorations .b-scene-thumb em{font-size:10px;font-style:normal;background:#ffffffb8;padding:4px 6px;align-self:flex-start}
+#bts-design-explorations .b-board-edit{display:grid;grid-template-columns:minmax(0,1fr) 245px;gap:28px;padding:20px;margin-top:22px}
+#bts-design-explorations .b-board-edit textarea{margin-top:12px;min-height:78px}
+#bts-design-explorations .b-board-side{border-left:1px solid var(--b-line);padding-left:24px;display:flex;flex-direction:column;gap:10px}
+/* Editorial: expressive type and a large composed preview. */
+#bts-design-explorations .b-editorial{--b-accent:#df4b2c!important;--b-tint:#fff0eb!important;--b-radius:2px!important}
+#bts-design-explorations .b-editorial .b-top{border-bottom:2px solid #1d2635;padding-inline:32px}
+#bts-design-explorations .b-editorial .b-logo{border-radius:0;background:#1d2635}
+#bts-design-explorations .b-editorial-main{display:grid;grid-template-columns:1.08fr 1fr;gap:36px;min-height:579px;padding:40px 40px 32px}
+#bts-design-explorations .b-editorial-copy{display:flex;flex-direction:column;gap:22px}
+#bts-design-explorations .b-editorial-copy h1{font-size:55px;letter-spacing:-3.8px;line-height:1.2}
+#bts-design-explorations .b-editorial-copy h1 span{color:var(--b-accent)}
+#bts-design-explorations .b-editorial-copy .b-primary{border-radius:2px;align-self:flex-start;padding:13px 23px}
+#bts-design-explorations .b-editorial-preview{position:relative;background:#f1f3f7;display:grid;place-items:center;padding:27px 20px;isolation:isolate}
+#bts-design-explorations .b-editorial-preview:before{content:'';position:absolute;inset:24px;border:1px solid #d7dde7;z-index:-1}
+#bts-design-explorations .b-editorial .b-poster{max-width:228px;border-radius:0;background:#fff;border:1px solid #1d2635;box-shadow:12px 12px 0 #dce2eb;padding:22px}
+#bts-design-explorations .b-editorial .b-poster:before{background:#ffd7ca;top:80px;width:240px;height:240px;right:-120px}
+#bts-design-explorations .b-editorial .b-poster-title{font-size:32px}
+#bts-design-explorations .b-editorial .b-caption{background:#df4b2c;border-radius:0}
+#bts-design-explorations .b-editorial-bottom{display:flex;gap:20px;padding-top:20px;border-top:1px solid var(--b-line);margin-top:auto}
+/* Studio: light controls frame a dark video stage and timeline. */
+#bts-design-explorations .b-studio-main{display:grid;grid-template-columns:minmax(0,1fr) 246px;min-height:579px}
+#bts-design-explorations .b-studio-stage{background:#151c2b;padding:16px 24px 18px;min-width:0;color:#dce4f2}
+#bts-design-explorations .b-studio-topline{display:flex;align-items:center;justify-content:space-between;font-size:11px;margin-bottom:14px;color:#a8b5c9}
+#bts-design-explorations .b-studio-stage .b-video-wrap{gap:11px}
+#bts-design-explorations .b-studio-stage .b-poster{max-width:156px;box-shadow:0 5px 30px #0003;padding:14px}
+#bts-design-explorations .b-studio-stage .b-poster-title{font-size:24px;margin-top:13px}
+#bts-design-explorations .b-studio-stage .b-poster-label{font-size:8px}
+#bts-design-explorations .b-studio-stage .b-sheet{min-height:58px;margin-top:16px;padding:9px}
+#bts-design-explorations .b-studio-stage .b-caption{font-size:10px;padding:6px 4px}
+#bts-design-explorations .b-studio-stage .b-transport{color:#bbc7db;max-width:250px}
+#bts-design-explorations .b-studio-stage .b-transport button{border-color:#435067;background:#273145;color:#fff}
+#bts-design-explorations .b-timeline{margin-top:20px;border-top:1px solid #334056;padding-top:14px}
+#bts-design-explorations .b-timeline-ruler{display:flex;justify-content:space-between;color:#a8b5c9;font-size:10px;margin-bottom:10px}
+#bts-design-explorations .b-timeline-track{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+#bts-design-explorations .b-timeline-track button{font-size:11px;justify-content:flex-start;min-height:44px;background:#344a6f;color:#e9efff;border:1px solid transparent;padding:8px}
+#bts-design-explorations .b-timeline-track button[aria-pressed=true]{border-color:#9abaff;background:#426499}
+#bts-design-explorations .b-waveform{display:flex;align-items:center;gap:3px;height:34px;background:#263b3c;margin-top:6px;border-radius:5px;padding:7px 10px;overflow:hidden}
+#bts-design-explorations .b-waveform span{height:var(--bar);min-width:2px;flex:1;background:#75b5a3;border-radius:1px}
+#bts-design-explorations .b-studio-inspector{padding:22px 20px;display:flex;flex-direction:column;gap:18px;background:#fafbfd;border-left:1px solid var(--b-line)}
+#bts-design-explorations .b-studio-inspector textarea{min-height:116px}
+#bts-design-explorations .b-inspector-tabs{display:flex;gap:20px;border-bottom:1px solid var(--b-line);padding-bottom:13px;font-size:12px;color:var(--b-muted)}
+#bts-design-explorations .b-inspector-tabs strong{color:var(--b-accent)}
+/* Guide: one decision at a time, with a persistent output summary. */
+#bts-design-explorations .b-guide{--b-accent:#187965!important;--b-tint:#eaf6f2!important}
+#bts-design-explorations .b-guide-steps{display:flex;align-items:center;justify-content:center;gap:32px;background:#fafcfc;padding:18px;border-bottom:1px solid var(--b-line);flex-wrap:wrap}
+#bts-design-explorations .b-guide-steps span{display:flex;gap:8px;align-items:center;color:var(--b-muted);font-size:12px}
+#bts-design-explorations .b-guide-steps span.is-active{color:var(--b-accent);font-weight:700}
+#bts-design-explorations .b-step-number{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#e9edef;font-size:11px;font-style:normal}
+#bts-design-explorations .is-active .b-step-number{background:var(--b-accent);color:#fff}
+#bts-design-explorations .b-guide-main{display:grid;grid-template-columns:minmax(0,1fr) 286px;gap:40px;padding:34px 48px 30px;min-height:516px}
+#bts-design-explorations .b-guide-copy{display:flex;flex-direction:column;gap:20px}
+#bts-design-explorations .b-guide-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#bts-design-explorations .b-guide-options button{border:1px solid var(--b-line);display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-height:76px;padding:14px;font-size:12px}
+#bts-design-explorations .b-guide-options button[aria-pressed=true]{border-color:var(--b-accent);background:var(--b-tint)}
+#bts-design-explorations .b-guide-options small{font-weight:400;font-size:11px;color:var(--b-muted)}
+#bts-design-explorations .b-guide-summary{background:#f1f6f5;border-radius:16px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:18px}
+#bts-design-explorations .b-guide-summary .b-poster{max-width:160px;padding:15px;background:#dfede8}
+#bts-design-explorations .b-guide-summary .b-poster:before{background:#a7cbbd}
+#bts-design-explorations .b-guide-summary .b-poster-title{font-size:23px;margin-top:16px}
+#bts-design-explorations .b-guide-summary .b-sheet{min-height:65px;margin-top:18px;padding:10px}
+#bts-design-explorations .b-guide-summary .b-caption{font-size:10px;padding:7px 3px}
+@container(max-width:850px){
+ #bts-design-explorations .b-focus-body{grid-template-columns:minmax(0,1fr) 256px}
+ #bts-design-explorations .b-focus-rail{display:none}
+ #bts-design-explorations .b-editorial-main{padding:30px;gap:24px}
+ #bts-design-explorations .b-editorial-copy h1{font-size:45px}
+ #bts-design-explorations .b-guide-main{padding:28px;gap:24px;grid-template-columns:minmax(0,1fr) 240px}
+ #bts-design-explorations .b-mock-scene{padding:8px}
+ #bts-design-explorations .b-scene-thumb{padding:13px 10px;height:164px}
+ #bts-design-explorations .b-scene-thumb strong{font-size:19px}
+ #bts-design-explorations .b-board-edit{grid-template-columns:minmax(0,1fr) 205px;gap:20px}
+}
+@container(max-width:600px){
+ #bts-design-explorations .bts-mock .b-top{padding:14px 16px;gap:10px}
+ #bts-design-explorations .bts-mock .b-top .b-project-name{display:none}
+ #bts-design-explorations .bts-mock .b-top .b-primary{font-size:11px;padding-inline:10px}
+ #bts-design-explorations .b-focus-body,#bts-design-explorations .b-editorial-main,#bts-design-explorations .b-guide-main,#bts-design-explorations .b-studio-main{grid-template-columns:1fr}
+ #bts-design-explorations .b-focus-editor{padding:24px 18px}
+ #bts-design-explorations .b-focus-preview{border-left:0;border-top:1px solid var(--b-line)}
+ #bts-design-explorations .b-focus-preview .b-poster{max-width:190px}
+ #bts-design-explorations .b-board-main{padding:24px 16px}
+ #bts-design-explorations .b-board-scenes{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ #bts-design-explorations .b-board-edit{grid-template-columns:1fr;gap:16px;padding:16px}
+ #bts-design-explorations .b-board-side{border-left:0;border-top:1px solid var(--b-line);padding:16px 0 0}
+ #bts-design-explorations .b-editorial-main{padding:28px 22px;gap:28px}
+ #bts-design-explorations .b-editorial-copy h1{font-size:42px}
+ #bts-design-explorations .b-editorial-preview{min-height:420px}
+ #bts-design-explorations .b-studio-inspector{border-left:0}
+ #bts-design-explorations .b-waveform span:nth-child(2n){display:none}
+ #bts-design-explorations .b-guide-main{padding:28px 18px}
+ #bts-design-explorations .b-guide-steps{gap:12px;padding-inline:10px}
+ #bts-design-explorations .b-guide-steps span{font-size:11px;gap:5px}
+ #bts-design-explorations .bts-mock .b-footer{padding:15px 16px}
+ #bts-design-explorations .bts-mock .b-form-grid{gap:10px}
+ #bts-design-explorations .bts-mock input,#bts-design-explorations .bts-mock textarea,#bts-design-explorations .bts-mock select{font-size:16px}
+}
+@media(max-width:650px){#bts-design-explorations .bts-stage{min-height:1600px}}
+@media(pointer:coarse){#bts-design-explorations .bts-mock button{min-height:44px}}
+</style>
+
+<div id="bts-design-explorations" class="viz-carousel" aria-label="블로그 투 쇼츠 디자인 5개" data-previous-label="이전 시안" data-next-label="다음 시안">
+  <section class="bts-stage" data-variant="포커스" aria-label="포커스: 편집에 집중하는 작업 공간">
+    <div class="bts-mock b-focus" data-design="focus" aria-label="포커스 작업 공간">
+      <header class="b-top"><div class="b-brand"><span class="b-logo"><i data-lucide="clapperboard" aria-hidden="true"></i></span>블로그 투 쇼츠</div><span class="b-project-name b-small b-muted">내 프로젝트 / 지역농협 NCS</span><span class="b-fill"></span><button class="b-primary cursor-interaction" data-output><i data-lucide="arrow-up-right" aria-hidden="true"></i>영상 만들기</button></header>
+      <div class="b-focus-body">
+        <nav class="b-focus-rail" aria-label="제작 단계"><p class="b-small b-muted" style="padding:0 10px 12px">WORKSPACE</p><span class="b-rail-item"><i data-lucide="link" aria-hidden="true"></i>본문과 이미지</span><span class="b-rail-item is-active"><i data-lucide="panels-top-left" aria-hidden="true"></i>장면 편집</span><span class="b-rail-item"><i data-lucide="audio-lines" aria-hidden="true"></i>음성과 음악</span><span class="b-fill"></span><div class="b-rail-item b-small">지역농협 NCS<br>4개 장면 / 30초</div></nav>
+        <main class="b-focus-editor"><div><p class="b-eyebrow">MAKE EVERY WORD COUNT</p><h1 style="margin-top:8px">이야기를 다듬는 시간</h1><p class="b-muted" style="margin-top:8px;font-size:12px">좋은 문장과 어울리는 장면을 연결해 보세요.</p></div><div class="b-focus-source b-panel"><i data-lucide="file-text" aria-hidden="true"></i><div><strong>지역농협 6급 NCS 공부 방법</strong><p class="b-muted b-small">블로그 본문 / 샘플 프로젝트</p></div><span class="b-fill"></span><i data-lucide="check" aria-hidden="true"></i></div><div data-scene-nav class="b-scene-nav"></div><label class="b-field">영상 제목<input value="NCS 문제풀이, 어디서부터?" data-title></label><label class="b-field">장면 <span data-scene-number style="display:contents">1</span> 자막<textarea data-caption>풀이 방법부터 차근차근 확인해요.</textarea></label><div class="b-form-grid"><label class="b-field">콘텐츠 톤<select><option>친절한 설명</option><option>빠른 쇼츠</option></select></label><label class="b-field">더빙 음성<select><option>Roger</option><option>기본 한국어 음성</option></select></label></div><p class="b-small b-muted">자막에는 숫자 그대로, 더빙에는 자연스러운 한국어 읽기.</p></main>
+        <aside class="b-focus-preview"><div class="b-row b-between"><h3>미리보기</h3><span class="b-small b-muted">9:16</span></div><div data-video></div><div class="b-row b-between b-small b-muted"><span>세로형 쇼츠</span><span>1080 x 1920</span></div></aside>
+      </div><footer class="b-footer"><span>포커스 / 편집과 미리보기를 나란히</span><span>디자인 시안</span></footer><div class="b-drawer" data-output-panel hidden></div>
+    </div>
+  </section>
+  <section class="bts-stage" data-variant="스토리보드" aria-label="스토리보드: 장면 전체를 펼쳐보는 구성" hidden>
+    <div class="bts-mock b-board" data-design="board" aria-label="스토리보드 작업 공간">
+      <header class="b-top"><div class="b-brand"><span class="b-logo"><i data-lucide="clapperboard" aria-hidden="true"></i></span>블로그 투 쇼츠</div><span class="b-fill"></span><span class="b-small b-muted">지역농협 NCS</span><button class="b-primary cursor-interaction" data-output>영상 만들기<i data-lucide="arrow-up-right" aria-hidden="true"></i></button></header>
+      <main class="b-board-main"><div class="b-row b-between"><div><p class="b-eyebrow">THE STORY COMES FIRST</p><h1 style="margin-top:6px">한눈에 보는 이야기의 흐름</h1></div><span class="b-pill">4 SCENES / 30 SEC</span></div><div class="b-board-scenes" data-board-scenes></div><div class="b-board-edit b-panel"><div><div class="b-row b-between"><h3><span data-scene-number>1</span>번 장면의 이야기</h3><span class="b-pill" data-role>관심 끌기</span></div><label class="b-field" style="margin-top:8px"><span class="b-small b-muted">자막을 선택하고 문장을 다듬어 보세요.</span><textarea data-caption aria-label="선택한 장면 자막">풀이 방법부터 차근차근 확인해요.</textarea></label></div><aside class="b-board-side"><label class="b-field">목소리<select><option>Roger / 차분하고 자연스럽게</option><option>기본 한국어 음성</option></select></label><div class="b-row b-between b-small"><span class="b-muted">배경음악</span><span>가벼운 리듬</span></div><div class="b-row b-between b-small"><span class="b-muted">화면 비율</span><span>세로 9:16</span></div></aside></div></main>
+      <footer class="b-footer"><span>스토리보드 / 흐름을 먼저 보고 세부 문장 편집</span><span>디자인 시안</span></footer><div class="b-drawer" data-output-panel hidden></div>
+    </div>
+  </section>
+  <section class="bts-stage" data-variant="에디토리얼" aria-label="에디토리얼: 글의 가치를 강조하는 타이포그래피" hidden>
+    <div class="bts-mock b-editorial" data-design="editorial" aria-label="에디토리얼 작업 공간">
+      <header class="b-top"><div class="b-brand"><span class="b-logo"><i data-lucide="move-up-right" aria-hidden="true"></i></span>블로그 투 쇼츠</div><span class="b-fill"></span><span class="b-small b-muted">WORDS INTO MOTION</span></header>
+      <main class="b-editorial-main"><div class="b-editorial-copy"><p class="b-eyebrow">YOUR WORDS. A NEW FORMAT.</p><h1>좋은 글을,<br><span>더 짧게.</span></h1><p class="b-muted" style="max-width:280px;line-height:1.9">글의 핵심은 그대로.<br>읽고 싶은 문장을 보고 싶은 영상으로.</p><div><label class="b-field">지금 만드는 이야기<input value="NCS 문제풀이, 어디서부터?" data-title></label><div class="b-row b-small b-muted" style="margin-top:11px"><span>4개 장면</span><span>/</span><span>30초</span><span>/</span><span>세로 영상</span></div></div><button class="b-primary cursor-interaction" data-output>이 이야기로 영상 만들기<i data-lucide="arrow-up-right" aria-hidden="true"></i></button><div class="b-editorial-bottom"><span style="font-size:30px;font-weight:750;letter-spacing:-2px">01</span><div class="b-fill"><label class="b-field">문장의 첫 장면<textarea data-caption style="min-height:68px">풀이 방법부터 차근차근 확인해요.</textarea></label></div></div></div><aside class="b-editorial-preview"><div data-video></div></aside></main>
+      <footer class="b-footer"><span>에디토리얼 / 큰 문장과 선명한 결과물</span><span>디자인 시안</span></footer><div class="b-drawer" data-output-panel hidden></div>
+    </div>
+  </section>
+  <section class="bts-stage" data-variant="스튜디오" aria-label="스튜디오: 타임라인 중심의 영상 편집기" hidden>
+    <div class="bts-mock b-studio" data-design="studio" aria-label="스튜디오 작업 공간">
+      <header class="b-top"><div class="b-brand"><span class="b-logo"><i data-lucide="clapperboard" aria-hidden="true"></i></span>블로그 투 쇼츠</div><span class="b-project-name b-small b-muted">지역농협 NCS / 편집 중</span><span class="b-fill"></span><button class="b-primary cursor-interaction" data-output><i data-lucide="download" aria-hidden="true"></i>내보내기</button></header>
+      <main class="b-studio-main"><div class="b-studio-stage"><div class="b-studio-topline"><span>프로그램 미리보기</span><span>1080 x 1920 / 30 fps</span></div><div data-video></div><div class="b-timeline"><div class="b-timeline-ruler"><span>00:00</span><span>00:10</span><span>00:20</span><span>00:30</span></div><div class="b-timeline-track" data-timeline></div><div class="b-waveform" data-waveform aria-label="내레이션 오디오 트랙 예시"></div><div class="b-row b-between" style="margin-top:8px;font-size:10px;color:#a8b5c9"><span>Roger / 내레이션</span><span>4개 장면</span></div></div></div><aside class="b-studio-inspector"><div class="b-inspector-tabs"><strong>자막</strong><span>화면</span><span>음성</span></div><div class="b-row b-between"><h3>장면 <span data-scene-number>1</span></h3><span class="b-pill" data-role>관심 끌기</span></div><label class="b-field">화면에 표시할 문장<textarea data-caption>풀이 방법부터 차근차근 확인해요.</textarea></label><div class="b-form-grid"><label class="b-field">크기<select><option>34 px</option><option>38 px</option></select></label><label class="b-field">정렬<select><option>가운데</option><option>왼쪽</option></select></label></div><div class="b-sep" style="margin:0"></div><label class="b-field">목소리<select><option>Roger</option><option>기본 한국어 음성</option></select></label><p class="b-small b-muted">숫자는 화면 표기를 유지하고 목소리로 풀어 읽어요.</p></aside></main>
+      <footer class="b-footer"><span>스튜디오 / 결과물을 보며 장면과 자막 조정</span><span>디자인 시안</span></footer><div class="b-drawer" data-output-panel hidden></div>
+    </div>
+  </section>
+  <section class="bts-stage" data-variant="가이드" aria-label="가이드: 한 단계씩 완성하는 제작 흐름" hidden>
+    <div class="bts-mock b-guide" data-design="guide" aria-label="가이드 작업 공간">
+      <header class="b-top"><div class="b-brand"><span class="b-logo"><i data-lucide="clapperboard" aria-hidden="true"></i></span>블로그 투 쇼츠</div><span class="b-fill"></span><span class="b-small b-muted">첫 영상도 가볍게</span></header>
+      <nav class="b-guide-steps" aria-label="제작 단계"><span><i class="b-step-number">1</i>글 가져오기</span><span class="is-active"><i class="b-step-number">2</i>스타일 정하기</span><span><i class="b-step-number">3</i>장면 확인</span></nav>
+      <main class="b-guide-main"><div class="b-guide-copy"><div><p class="b-eyebrow">LET'S MAKE IT YOURS</p><h1 style="margin-top:8px">어떤 이야기로 들려줄까요?</h1><p class="b-muted" style="margin-top:10px;font-size:12px">분위기와 길이를 정하면 영상의 방향이 잡혀요.</p></div><div class="b-guide-options" role="group" aria-label="콘텐츠 톤 선택"><button class="cursor-interaction" data-tone="친절한 설명" aria-pressed="true"><i data-lucide="book-open" aria-hidden="true"></i>친절한 설명<small>핵심을 차근차근 전달해요.</small></button><button class="cursor-interaction" data-tone="빠른 쇼츠" aria-pressed="false"><i data-lucide="zap" aria-hidden="true"></i>빠른 쇼츠<small>짧고 명확하게 집중시켜요.</small></button><button class="cursor-interaction" data-tone="솔직한 리뷰" aria-pressed="false"><i data-lucide="message-square" aria-hidden="true"></i>솔직한 리뷰<small>경험과 특징을 소개해요.</small></button><button class="cursor-interaction" data-tone="상품 소개" aria-pressed="false"><i data-lucide="shopping-bag" aria-hidden="true"></i>상품 소개<small>장점과 정보를 전해요.</small></button></div><div class="b-form-grid"><label class="b-field">영상 길이<select data-length><option value="30">30초</option><option value="45">45초</option><option value="60">60초</option></select></label><label class="b-field">더빙 음성<select><option>Roger</option><option>기본 한국어 음성</option></select></label></div><div class="b-row b-between" style="margin-top:auto"><span class="b-small b-muted">내 글의 내용은 그대로 담아요.</span><button class="b-primary cursor-interaction" data-output>다음 단계<i data-lucide="arrow-right" aria-hidden="true"></i></button></div></div><aside class="b-guide-summary"><div class="b-row b-between" style="width:100%"><h3>완성될 영상</h3><span class="b-small b-muted">9:16</span></div><div data-video></div><p class="b-small b-muted"><span data-tone-summary>친절한 설명</span> / <span data-length-summary>30</span>초 / Roger</p></aside></main>
+      <footer class="b-footer"><span>가이드 / 선택지를 나누어 쉬워진 시작</span><span>디자인 시안</span></footer><div class="b-drawer" data-output-panel hidden></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+ const root=document.getElementById('bts-design-explorations');
+ const labels=['관심 끌기','공부 방법','수강 정보','마무리'];
+ const initial=['풀이 방법부터 차근차근 확인해요.','풀이 방법과 풀이 속도를 함께 연습해요.','수강 기간은 60일, 교재비는 별도예요.','학습 내용과 수강 조건을 확인해 보세요.'];
+ const titles=['NCS\n문제풀이\n어디서부터?','풀이 방법과\n풀이 속도,\n함께 연습해요.','60일의\n학습 계획을\n세워보세요.','내게 맞는\n학습 과정을\n확인해요.'];
+ const thumbTitles=['NCS 문제풀이,<br>어디서부터?','방법과 속도,<br>함께 연습해요.','60일의<br>학습 계획','내게 맞는<br>과정을 찾아요.'];
+ const palette=['#e9edff','#e7eff0','#eeebf5','#e9edf4'];
+ const poster=()=>'<div class="b-video-wrap"><div class="b-poster"><span class="b-poster-label">THE LEARNING NOTE</span><div class="b-poster-title" data-poster-title style="white-space:pre-line">NCS\n문제풀이\n어디서부터?</div><div class="b-sheet" aria-hidden="true"><span style="font-size:10px;font-weight:700">NCS / STUDY PLAN</span><div class="b-rule"></div><div class="b-rule"></div><div class="b-rule" style="width:85%"></div></div><div class="b-caption" data-poster-caption>풀이 방법부터<br>차근차근 확인해요.</div></div><div class="b-transport"><span data-time>00:00 / 00:30</span><button type="button" class="cursor-interaction" data-next-scene aria-label="다음 장면 미리보기"><i data-lucide="skip-forward" aria-hidden="true"></i></button><span>장면 <span data-preview-number>1</span> / 4</span></div></div>';
+ root.querySelectorAll('[data-design]').forEach(mock=>{
+   const state={active:0,duration:30,captions:[...initial],accent:getComputedStyle(mock).getPropertyValue('--b-accent').trim(),radius:12};
+   mock.querySelectorAll('[data-video]').forEach(el=>{el.innerHTML=poster();});
+   const nav=mock.querySelector('[data-scene-nav]');
+   if(nav)nav.innerHTML=labels.map((label,i)=>`<button class="cursor-interaction" data-scene="${i}" aria-pressed="${i===0}">${i+1}. ${label}</button>`).join('');
+   const board=mock.querySelector('[data-board-scenes]');
+   if(board)board.innerHTML=labels.map((label,i)=>`<article class="b-mock-scene ${i===0?'is-active':''}"><button class="cursor-interaction" data-scene="${i}" aria-pressed="${i===0}" aria-label="${i+1}번 장면 ${label}"><div class="b-scene-thumb" style="background:${palette[i]}"><small>THE LEARNING NOTE</small><strong>${thumbTitles[i]}</strong><em>${i===2?'60일 / 교재비 별도':'NCS STUDY GUIDE'}</em></div><span class="b-row b-between" style="width:100%;font-size:11px"><strong>${String(i+1).padStart(2,'0')} / ${label}</strong><span class="b-muted">${i===3?'6초':'8초'}</span></span></button></article>`).join('');
+   const timeline=mock.querySelector('[data-timeline]');
+   if(timeline)timeline.innerHTML=labels.map((label,i)=>`<button class="cursor-interaction" data-scene="${i}" aria-pressed="${i===0}">${String(i+1).padStart(2,'0')} ${label}</button>`).join('');
+   const wave=mock.querySelector('[data-waveform]');
+   if(wave)wave.innerHTML=Array.from({length:72},(_,i)=>`<span style="--bar:${4+(i*7%17)}px"></span>`).join('');
+   function update(){
+     mock.querySelectorAll('[data-scene]').forEach(button=>{const selected=Number(button.dataset.scene)===state.active;button.setAttribute('aria-pressed',String(selected));button.closest('.b-mock-scene')?.classList.toggle('is-active',selected);});
+     mock.querySelectorAll('[data-scene-number],[data-preview-number]').forEach(el=>{el.textContent=String(state.active+1);});
+     mock.querySelectorAll('[data-role]').forEach(el=>{el.textContent=labels[state.active];});
+     mock.querySelectorAll('[data-poster-title]').forEach(el=>{el.textContent=titles[state.active];});
+     mock.querySelectorAll('[data-poster-caption]').forEach(el=>{el.textContent=state.captions[state.active];});
+     const stamp=seconds=>`${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
+     mock.querySelectorAll('[data-time]').forEach(el=>{el.textContent=`${stamp(Math.round(state.active*8*state.duration/30))} / ${stamp(state.duration)}`;});
+     const editor=mock.querySelector('[data-caption]');if(editor)editor.value=state.captions[state.active];
+   }
+   mock.querySelectorAll('[data-scene]').forEach(button=>button.addEventListener('click',()=>{state.active=Number(button.dataset.scene);update();}));
+   mock.querySelectorAll('[data-next-scene]').forEach(button=>button.addEventListener('click',()=>{state.active=(state.active+1)%4;update();}));
+   mock.querySelectorAll('[data-caption]').forEach(input=>input.addEventListener('input',()=>{state.captions[state.active]=input.value;mock.querySelectorAll('[data-poster-caption]').forEach(el=>{el.textContent=input.value;});}));
+   mock.querySelectorAll('[data-title]').forEach(input=>input.addEventListener('input',()=>{mock.querySelectorAll('[data-poster-title]').forEach(el=>{el.textContent=input.value;});}));
+   mock.querySelectorAll('[data-tone]').forEach(button=>button.addEventListener('click',()=>{mock.querySelectorAll('[data-tone]').forEach(other=>other.setAttribute('aria-pressed',String(other===button)));mock.querySelector('[data-tone-summary]').textContent=button.dataset.tone;}));
+   mock.querySelectorAll('[data-length]').forEach(input=>input.addEventListener('change',()=>{state.duration=Number(input.value);mock.querySelector('[data-length-summary]').textContent=input.value;update();}));
+   const output=mock.querySelector('[data-output-panel]');
+   output.innerHTML='<div class="b-row b-between"><div><h3>출력 설정 미리보기</h3><p class="b-small" style="margin-top:5px">MP4 / 1080 x 1920 / 자막 SRT 포함</p><p class="b-small b-muted" style="margin-top:4px">디자인 시안에서는 실제 영상 생성 없이 구성을 확인해요.</p></div><button type="button" class="b-outline cursor-interaction" data-close-output>닫기</button></div>';
+   mock.querySelectorAll('[data-output]').forEach(button=>button.addEventListener('click',()=>{output.hidden=!output.hidden;button.setAttribute('aria-expanded',String(!output.hidden));if(!output.hidden)output.scrollIntoView({block:'nearest',behavior:'smooth'});}));
+   mock.querySelector('[data-close-output]').addEventListener('click',()=>{output.hidden=true;mock.querySelector('[data-output]')?.setAttribute('aria-expanded','false');});
+   if(globalThis.Tweak){
+     const tweak=new Tweak({container:mock,onChange:()=>{mock.style.setProperty('--b-accent',state.accent,'important');mock.style.setProperty('--b-radius',state.radius+'px','important');}});
+     tweak.addColorPicker(state,'accent',{label:'강조 색상',reference:'--b-accent'});
+     tweak.addSlider(state,'radius',{label:'패널 모서리',min:0,max:20,step:2,unit:'px',reference:'--b-radius'});
+   }
+ });
+ if(globalThis.lucide)lucide.createIcons({attrs:{width:16,height:16}});
+})();
+</script>
