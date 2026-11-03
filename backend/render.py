@@ -11,6 +11,7 @@ from pathlib import Path
 from .config import ROOT
 from .elevenlabs import generate_eleven_scenes
 from .music import music_catalog, music_wav
+from .narration import narration_text
 from .timing import (narration_speed, fitted_speed, tempo_filter, scene_durations,
                      caption_timing, srt_subtitles, photo_motion_filter, CAPTION_BOX, js_round)
 
@@ -62,6 +63,7 @@ def wav_duration(data):
 
 async def render_video(frames, texts, voice, audio, tts, target, progress, motion_layers, caption_layers, client):
     speed, ffmpeg = narration_speed(tts.get('speed',1)), ffmpeg_path()
+    narrations = [narration_text(text) for text in texts]
     renders = ROOT/'renders'
     renders.mkdir(exist_ok=True)
     # Only this unique task directory is ever cleaned; inputs and licensed music live outside it.
@@ -85,11 +87,11 @@ async def render_video(frames, texts, voice, audio, tts, target, progress, motio
                 mp3.write_bytes(data)
                 await run(ffmpeg,['-y','-i',mp3,'-ar','24000','-ac','1','-c:a','pcm_s16le',directory/f'{i}.wav'])
                 progress(js_round(10+30*(i+1)/len(texts)),f'ElevenLabs 음성 생성 중 · {i+1}/{len(texts)}장면 완료')
-            await generate_eleven_scenes(texts,tts.get('voiceId',''),save_audio,client)
+            await generate_eleven_scenes(narrations,tts.get('voiceId',''),save_audio,client)
         elif voice:
             progress(10,f'기본 한국어 음성을 생성하고 있어요 · {len(texts)}장면')
             speech_json=directory/'speech.json'
-            speech_json.write_text(json.dumps(texts,ensure_ascii=False),encoding='utf-8')
+            speech_json.write_text(json.dumps(narrations,ensure_ascii=False),encoding='utf-8')
             await run('powershell.exe',['-NoProfile','-File',ROOT/'voice.ps1','-InputFile',speech_json,'-OutputDirectory',directory],'한국어 음성 합성 실패. 설치된 음성을 확인하세요.')
         effective, speech = speed, None
         def speech_file(i):

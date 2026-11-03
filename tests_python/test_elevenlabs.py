@@ -2,6 +2,7 @@ import json
 import httpx
 import pytest
 from backend.elevenlabs import available_credits,eleven_options,generate_eleven_scenes
+from backend.narration import narration_text
 
 
 def test_credits_exclude_overage():
@@ -64,3 +65,26 @@ async def test_insufficient_credits_and_bad_audio_never_retry(monkeypatch):
         with pytest.raises(ValueError,match='음성 파일'):
             await generate_eleven_scenes(['확인해 보세요.']*4,'ok',save,client,enough)
         assert len(calls)==1
+
+
+async def test_expanded_speech_limit_and_credit_check_use_actual_spoken_text(monkeypatch):
+    monkeypatch.setenv('ELEVENLABS_API_KEY','test')
+    caption='가격은 '+('88,888원, '*15)+'조건을 확인해요.'
+    texts=[narration_text(caption)]*4
+    assert len(caption)<=160<len(texts[0])
+    remaining=len(caption)*4
+    calls=[]
+    async def account():
+        return dict(ready=True,voices=[dict(id='ok')],remaining=remaining)
+    def handler(request):
+        calls.append(json.loads(request.content)['text'])
+        return httpx.Response(200,content=b'audio',headers={'content-type':'audio/mpeg'})
+    async def save(*args):
+        pass
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        with pytest.raises(ValueError,match='잔여 크레딧'):
+            await generate_eleven_scenes(texts,'ok',save,client,account)
+        assert not calls
+        remaining=sum(map(len,texts))
+        await generate_eleven_scenes(texts,'ok',save,client,account)
+    assert calls==texts

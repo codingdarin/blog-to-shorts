@@ -4,6 +4,8 @@ const sentenceEnd=word=>/[.!?。！？]["'”’)]*$/.test(word);
 // A lightweight Korean boundary preference, not a full grammatical parser.
 function boundaryCost(before,after){
  if(sentenceEnd(before))return 0;
+ // 풀이 is a noun, not 풀 followed by the subject particle 이.
+ if(/풀이$/.test(before))return 55;
  if(/^(수|뒤|때|것|것이|것을|있어요|있죠|없어요|보세요|해요|돼요|드려요)[.!?,]?$/.test(after))return 65;
  if(/(하는|되는|있는|없는|위한|대한|통한|같은|익힌|확인한|작성한|배운)$/.test(before))return 55;
  if(/^(주요|핵심|최신|다양한|필요한|중요한|이런|그런|모든)$/.test(before)||/(의|과|와|을|를)$/.test(before))return 45;

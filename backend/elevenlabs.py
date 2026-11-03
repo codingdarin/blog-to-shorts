@@ -4,6 +4,7 @@ import re
 from urllib.parse import quote
 
 from .timing import finite
+from .narration import MAX_NARRATION_LENGTH
 
 
 async def eleven_request(client, endpoint, method='GET', payload=None):
@@ -35,7 +36,7 @@ async def eleven_options(client):
 
 
 async def generate_eleven_scenes(texts, voice_id, save_audio, client, options_loader=None):
-    if not isinstance(texts,list) or not 4 <= len(texts) <= 6 or any(not isinstance(t,str) or not t.strip() or len(t)>160 for t in texts):
+    if not isinstance(texts,list) or not 4 <= len(texts) <= 6 or any(not isinstance(t,str) or not t.strip() or len(t)>MAX_NARRATION_LENGTH for t in texts):
         raise ValueError('음성 대본 4~6개를 확인하세요.')
     account = await options_loader() if options_loader else await eleven_options(client)
     if not account['ready'] or not any(v['id']==voice_id for v in account['voices']):

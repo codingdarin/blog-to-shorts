@@ -9,7 +9,7 @@ INPUT=dict(title='공부 방법',text='핵심 개념을 자신의 말로 설명�
 
 
 def draft(count=6):
-    return dict(headline='개념을 내 것으로 만드는 방법',scenes=[dict(role='hook' if i==0 else 'cta' if i==count-1 else 'body',text='핵심 개념을 자신의 말로 설명해 보세요.',photoId='1',reason='학습 순서 이미지예요.') for i in range(count)],warnings=[])
+    return dict(headline='개념을 내 것으로 만드는 방법',scenes=[dict(role='hook' if i==0 else 'cta' if i==count-1 else 'body',text='핵심 개념을 자신의 말로 설명해 보세요.',narration='핵심 개념을 자신의 말로 설명해 보세요.',photoId='1',reason='학습 순서 이미지예요.') for i in range(count)],warnings=[])
 
 
 @pytest.mark.parametrize('count',[4,5,6])
@@ -163,3 +163,47 @@ async def test_source_word_in_metadata_does_not_repair_or_rewrite_captions():
         return copy.deepcopy(expected)
     assert await plan_blog(INPUT,generate=generate)==expected
     assert len(calls)==1
+
+
+async def test_reported_price_scene_is_normalized_without_ai_retry():
+    text='취업동스쿨의 지역농협 6급 NCS 프리패스는 수강 기간 60일, 가격 166,400원이며 교재는 166,000원입니다.'
+    calls=[]
+    async def generate(prompt,schema,images):
+        calls.append(prompt)
+        assert 'narration' in schema['properties']['scenes']['items']['required']
+        assert PROMPTS['speechText'] in prompt
+        result=draft()
+        result['scenes'][4].update(text=text,narration='교재는 십육만원이에요.')
+        return result
+    result=await plan_blog(INPUT,generate=generate)
+    scene=result['scenes'][4]
+    assert len(calls)==1
+    assert scene['text']==text.replace('입니다.','이에요.')
+    assert scene['narration']=='취업동스쿨의 지역농협 육급 NCS 프리패스는 수강 기간 육십일, 가격 십육만육천사백원이며 교재는 십육만육천원이에요.'
+    assert not narration_style_issues([scene['text'],scene['narration']])
+
+
+@pytest.mark.parametrize('text,expected',[
+    ('교재는 166,000원입니다.','교재는 166,000원이에요.'),
+    ('준비한 강의 패키지입니다.','준비한 강의 패키지예요.'),
+    ('할인 대상은 아닙니다.','할인 대상은 아니에요.'),
+    ('내용을 확인했습니다. 변경됐습니다.','내용을 확인했어요. 변경됐어요.'),
+    ('강의 이름은 "반갑습니다"예요.','강의 이름은 "반갑습니다"예요.'),
+    ('"좋습니다."라는 후기를 남겼어요.','"좋습니다."라는 후기를 남겼어요.'),
+])
+def test_safe_ending_repair_preserves_values_and_names(text,expected):
+    assert normalize_endings(text)==expected
+
+
+async def test_style_only_failure_returns_editable_draft_after_one_repair():
+    calls=[]
+    async def generate(prompt,schema,images):
+        calls.append(prompt)
+        result=draft()
+        result['scenes'][2]['text']='답안을 작성하고 내용을 점검하였다.'
+        return result
+    result=await plan_blog(INPUT,generate=generate)
+    assert len(calls)==2
+    assert result['scenes'][2]['text']=='답안을 작성하고 내용을 점검하였다.'
+    assert result['scenes'][2]['narration']==result['scenes'][2]['text']
+    assert any('장면 3 해요체 오류' in warning for warning in result['warnings'])

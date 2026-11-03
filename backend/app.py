@@ -208,8 +208,11 @@ def validate_render(data):
         raise ValueError('장면 이미지 4~6개가 필요해요.')
     if not isinstance(motion,list) or len(motion) not in (0,len(frames)) or any(f is not None and (not isinstance(f,str) or not PNG.fullmatch(f)) for f in motion):
         raise ValueError('사진 움직임 레이어를 확인해 주세요.')
-    if not isinstance(texts,list) or len(texts)!=len(frames) or any(not isinstance(t,str) or not t.strip() or len(t)>160 for t in texts) or narration_style_issues(texts):
-        raise ValueError('각 장면은 160자 이하의 완결된 해요체로 작성해 주세요. 예: 확인해 보세요.')
+    if not isinstance(texts,list) or len(texts)!=len(frames) or any(not isinstance(t,str) or not t.strip() or len(t)>160 for t in texts):
+        raise ValueError('각 장면은 비어 있지 않은 160자 이하의 문구로 작성해 주세요.')
+    style_issues = narration_style_issues(texts)
+    if style_issues:
+        raise ValueError('영상 생성 전에 다음 장면을 해요체로 수정해 주세요. '+' / '.join(style_issues))
     validate_caption_layers(data['captionLayers'],texts)
     audio=data['audio']
     if not isinstance(audio,dict) or audio.get('music') not in [t['id'] for t in music_catalog()] or not finite(audio.get('volume')) or not 0<=audio['volume']<=.5 or type(audio.get('sfx')) is not bool:

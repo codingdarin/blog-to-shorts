@@ -106,6 +106,17 @@ async def test_video_download_filename_cache_and_expiry(client,monkeypatch):
     assert (await client.get(links[-1])).status_code==404
 
 
+async def test_unresolved_style_identifies_scene_before_rendering(client,monkeypatch):
+    async def render(*args):
+        pytest.fail('Uncorrected style must not spend TTS credits')
+    monkeypatch.setattr(api,'render_video',render)
+    texts=list(RENDER['texts'])
+    texts[2]='답안을 작성하고 내용을 점검하였다.'
+    response=await client.post('/api/render',json=dict(RENDER,texts=texts))
+    assert response.status_code==400
+    assert '장면 3' in response.json()['error'] and texts[2] in response.json()['error']
+
+
 async def test_render_subprocess_cancel_kills_child(monkeypatch):
     import backend.render as rendering
     started=asyncio.Event()

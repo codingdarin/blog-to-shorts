@@ -90,3 +90,15 @@ test('semantic grouping yields to the actual width limit, even by one pixel',()=
   assert.deepEqual(pages.flatMap(p=>p.lines.join(' ').split(' ')),content.split(' '));
  }
 });
+
+test('풀이 is kept with 방법 and 속도 rather than treated as a subject particle',()=>{
+ const content='문제 풀이 방법과 풀이 속도를 함께 연습해 보세요.';
+ const pages=captionPages(content,measure);
+ assert.ok(pages.some(page=>page.lines.some(line=>line.includes('풀이 방법과'))));
+ assert.ok(pages.some(page=>page.lines.some(line=>line.includes('풀이 속도를'))));
+ for(const width of [200,400,636]){
+  const result=captionPages(content,measure,width);
+  assert.deepEqual(result.flatMap(page=>page.lines.join(' ').split(' ')),content.split(' '));
+  assert.ok(result.every(page=>page.lines.every(line=>measure(line)<=width)));
+ }
+});
