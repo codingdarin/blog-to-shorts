@@ -75,6 +75,8 @@ def main():
     config = dict(source=dict(branch='gh-pages', path='/'), build_type='legacy')
     run(['gh', 'api', endpoint, '--method', 'PUT' if current.returncode == 0 else 'POST', '--input', '-'],
         input=json.dumps(config).encode(), capture_output=True)
+    if current.returncode:
+        run(['gh', 'api', endpoint + '/builds', '--method', 'POST'], capture_output=True)
     print(json.dumps(dict(url=f'https://{owner.lower()}.github.io/{name}/', commit=commit, apiOrigin=args.api_origin)))
 
 

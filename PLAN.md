@@ -474,4 +474,14 @@
 
 - 사용자 확정: 저장소를 public으로 바꾸고 GitHub Pages에 배포하며 이 노트북을 백엔드 서버로 사용한다. 이 요청이 앞선 private 유지/배포 미정 결정보다 우선한다.
 - 사용자 추가 요청: Downloads의 vjgalaxy-salsa-estilo-new-york-03-522534.mp3를 배경음악으로 연결한다. 기존 Salsa 항목을 사용하고 원곡과 미리듣기 파일은 local-data/music 아래 Git 제외 경로에 둔다.
-- 진행 중: Git 이력과 추적 파일의 비밀정보 검사, GitHub Pages 정적 배포 구성, 무료 외부 서버 연결 및 접근 제한, 음원 연결을 준비한다. 공개 전 확인과 실제 배포/서버 검증 결과를 이 절에 기록한다.
+- 완료: codingdarin/blog-to-shorts를 public으로 전환했고 https://codingdarin.github.io/blog-to-shorts/ 에 정적 화면을 배포했다. GitHub Pages의 gh-pages 커밋 539ecddcb0a25d106fa9a67d05907e79ded56a40에 대해 built를 확인했다. 소스는 codex/naver-education-shorts에 푸시했고 main을 자동 병합하거나 기본 브랜치를 변경하지 않았다.
+- 노트북 API는 Cloudflare 무료 Quick Tunnel의 HTTPS 주소로 연결했다. 임시 주소는 local-data/public-server/state.json 및 Git 제외 .env의 PUBLIC_API_ORIGIN에 보관한다. 비밀번호 없는 API 요청은 401, 외부 호스트인데 비밀번호 설정이 없으면 503으로 거부한다. 허용한 GitHub Pages Origin의 CORS 사전 요청은 204다. 공유 비밀번호는 서버 .env와 local-data/public-server/access.txt에만 저장하고 URL/정적 빌드/브라우저 저장소에 넣지 않는다. 사용자 요청으로 채팅에서 비밀번호를 전달했다.
+- 프런트는 지정된 API 주소에만 인증 헤더를 보내고, 음악/완성 영상도 인증 후 Blob URL로 재생/다운로드한다. 기존 로컬 서버와 숫자 더빙/진행률/편집 기능을 유지한다. 접속 화면과 서버 연결 실패 안내를 추가했다.
+- scripts/serve-public.ps1은 이 저장소의 서버/터널만 확인해 교체하며, 터널 재시작 후 새 주소로 Pages 빌드를 갱신한다. Windows 전원/절전이나 로그인 자동 시작은 변경하지 않았다. 재부팅 후 이 스크립트를 다시 실행해야 하며 노트북/인터넷/서버/터널이 켜져 있어야 한다. Quick Tunnel은 고정 주소나 가용성을 보장하지 않는 테스트용 연결이다. [Cloudflare 안내](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/).
+- 음원: 사용자가 지정한 MP3를 local-data/music/salsa-new-york.mp3에 복사했다. 2,930,688바이트, 원본과 SHA256 일치, FFmpeg 전체 디코드 종료 코드 0이다. 20초 미리듣기 321,069바이트를 만들었고 음악 API의 기본 Salsa/브금 없음 목록을 확인했다. 기존 카탈로그 항목을 사용해 중복 등록하지 않았다. 원곡/미리듣기 모두 Git 제외다.
+- 공개 전 검사: 49개 커밋/318개 blob에서 현재 API 키 2개와 주요 토큰/개인키 패턴을 검색했고 일치 0건, 민감 경로 추적 0건이었다. 배포 직후 51개 커밋/332개 blob을 현재 API 키와 공유 비밀번호 3개에 대해 다시 검사해 일치 0건을 확인했다. 이는 검사한 값/패턴 범위의 결과이며 모든 비밀정보 부재를 보장하는 검사는 아니다. 실제 빌드 결과에서도 서버 비밀값 포함 여부를 검사하고 일치하면 푸시를 중단하도록 했다.
+- 검증: 프런트 25개 + Python 117개 = 142개 테스트 통과. npm run check, 로컬/Pages 빌드, 스크립트 구문 검사, git diff --check 통과. 새 테스트는 허용 Origin/사전 요청/잘못된 비밀번호/미설정 외부 서버/미디어 인증/인증값의 다른 URL 전송 방지를 확인한다.
+- 실제 외부 HTTPS API: 비인증 /health 200 및 /api/status 401, 인증 후 상태/음악/미리듣기 200, Pages Origin의 CORS 응답을 확인했다. 실제 네이버 본문 1,479자와 이미지 7장을 수집했다.
+- 실제 외부 영상: 검정 PNG 4장과 Salsa 12%, TTS 끄기로 30.0초 MP4 330,260바이트를 생성했다. 진행 이벤트 9개와 완료 응답, 인증된 다운로드, FFmpeg 전체 디코드 종료 코드 0을 확인했다. 검증 이미지 준비 시 PIL 미설치를 확인해 설치 없이 표준 라이브러리로 PNG를 작성했다. 이는 음원/서버 경로 검증용 수동 입력이며 신규 AI/TTS 결과가 아니다.
+- 실제 Pages 브라우저: 공유 비밀번호 로그인, NVIDIA 서버 키 사용 표시, 본문 1,479자/이미지 7장, Salsa 기본 선택을 확인했다. 미리듣기 duration 20초/currentTime 약 4.6초/오류 없음 확인 후 일시정지했다. 현재 테스트 페이지를 열어뒀다.
+- 증빙: Git 제외 local-data/publication-20261103/에 비밀정보 검사 집계, blog.json, render-result.json, render-events.json, public-bgm-test.mp4, pages-ui.png를 저장했다. 본문/음원/영상과 사용자 practice.py는 저장소에 추가하지 않았다. 이번 배포 검증에서 새 AI/ElevenLabs/Windows TTS 호출은 없으며 앞선 프롬프트 검증과 구별한다.
