@@ -13,7 +13,8 @@ RENDER=dict(frames=[PNG]*4,texts=['핵심 내용을 확인해 보세요.']*4,voi
 
 
 @pytest.fixture
-async def client():
+async def client(monkeypatch):
+    monkeypatch.delenv('SERVER_ACCESS_TOKEN',raising=False)
     async with lifespan(app):
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://127.0.0.1:4311') as client:
             yield client
@@ -36,6 +37,32 @@ async def test_routes_and_request_guards(client):
     for body in [dict(INPUT,tone=[]),dict(RENDER,tts=[]),dict(RENDER,texts=['오류']*4)]:
         r=await client.post('/api/script' if 'tone' in body else '/api/render',json=body)
         assert r.status_code==400
+
+
+async def test_public_access_preflight_and_password(client,monkeypatch):
+    origin='https://codingdarin.github.io'
+    monkeypatch.setenv('PUBLIC_ORIGIN',origin)
+    monkeypatch.setenv('PUBLIC_API_ORIGIN','https://demo.trycloudflare.com')
+    monkeypatch.setenv('SERVER_ACCESS_TOKEN','test-access-password')
+    headers={'Host':'demo.trycloudflare.com','Origin':origin}
+    for path in ['/api/status','/api/music','/api/music/salsa-new-york','/api/video/unknown']:
+        response=await client.get(path,headers=headers)
+        assert response.status_code==401
+        assert response.headers['access-control-allow-origin']==origin
+        assert 'test-access-password' not in response.text
+    assert (await client.post('/api/script',json=INPUT,headers=headers)).status_code==401
+    response=await client.options('/api/script',headers={**headers,'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'authorization,content-type,accept'})
+    assert response.status_code==204 and response.headers['access-control-allow-origin']==origin
+    authorized={**headers,'Authorization':'Bearer test-access-password','Sec-Fetch-Site':'cross-site'}
+    assert (await client.get('/api/status',headers=authorized)).status_code==200
+    assert (await client.post('/api/script',json=dict(INPUT,sceneCount=3),headers=authorized)).status_code==400
+    assert (await client.get('/api/status',headers={**authorized,'Origin':'https://evil.example'})).status_code==403
+    assert (await client.get('/api/status',headers={**headers,'Authorization':'Bearer wrong'})).status_code==401
+    assert (await client.get('/api/status')).status_code==401
+    assert (await client.options('/api/script',headers={**headers,'Access-Control-Request-Method':'DELETE'})).status_code==403
+    monkeypatch.delenv('SERVER_ACCESS_TOKEN')
+    assert (await client.get('/api/status',headers=headers)).status_code==503
+    assert (await client.get('/api/status')).status_code==200
 
 
 async def test_stream_progress_complete_error_and_release(client,monkeypatch):

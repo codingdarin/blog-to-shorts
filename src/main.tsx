@@ -13,7 +13,11 @@ import {api,loadImage,analysisImage,drawFrame,photoLayer,captionLayers,initialCa
 import {narrationFromCaptions,captionEditorIssue,captionPosition} from './captions.js';
 import {AIConnection,type AIProvider} from './components/ai-connection';
 import {AI_SETTINGS_KEY,defaultModels,readPreferences,savePreferences,defaultVoice} from './ai-settings.js';
+import {apiFetch,configureApi,mediaUrl} from './api-client.js';
 import './index.css';
+
+const apiBase=import.meta.env.VITE_API_BASE||'';
+configureApi(apiBase);
 
 type Scene={role:string;text:string;captions:string[];photoId:string;reason:string};
 type Photo={id:string;dataUrl:string;image:HTMLImageElement;title:string;description:string;artist:string;pageUrl?:string;imageUrl?:string;license?:string};
@@ -22,6 +26,31 @@ type Voice={id:string;name:string};
 const roles:Record<string,string>={hook:'Hook · 관심 끌기',body:'본문 · 핵심 설명',cta:'CTA · 마무리'};
 function Section({step,title,description,children}:{step:string;title:string;description:string;children:React.ReactNode}){
  return <Card className="gap-0 border-slate-200 py-0 shadow-none"><CardHeader className="border-b border-slate-100 px-6 py-5"><CardTitle className="flex items-center gap-3 text-base"><span className="font-mono text-sm text-blue-600">{step}</span>{title}</CardTitle><CardDescription className="text-xs leading-relaxed">{description}</CardDescription></CardHeader><CardContent className="space-y-4 p-6">{children}</CardContent></Card>;
+}
+function ServerAccess(){
+ const [ready,setReady]=useState(false),[checking,setChecking]=useState(true),[password,setPassword]=useState(''),[message,setMessage]=useState('서버에 연결하고 있어요.');
+ async function connect(token=''){
+  setChecking(true);configureApi(apiBase,token);
+  try{
+   const response=await apiFetch('/api/status');
+   if(response.status===401){setMessage(token?'접속 비밀번호를 확인해 주세요.':'전달받은 접속 비밀번호를 입력해 주세요.');return;}
+   if(!response.ok)throw Error();
+   await response.json();setPassword('');setReady(true);
+  }catch{setMessage('서버에 연결할 수 없어요. 서버 노트북과 인터넷 연결을 확인해 주세요.');}
+  finally{setChecking(false);}
+ }
+ useEffect(()=>{void connect();},[]);
+ if(ready)return <App/>;
+ return <div className="flex min-h-dvh items-center justify-center bg-slate-50 p-5"><Card className="w-full max-w-md"><CardHeader><CardTitle>블로그 투 쇼츠</CardTitle><CardDescription>서버에 연결해 영상 제작을 시작하세요.</CardDescription></CardHeader><CardContent><form className="space-y-4" onSubmit={e=>{e.preventDefault();void connect(password);}}><label className="field-label" htmlFor="server-password">접속 비밀번호</label><Input id="server-password" type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} disabled={checking}/><p role="status" className="text-sm text-slate-600">{message}</p><Button type="submit" className="w-full" disabled={checking}>{checking?'연결 확인 중':'연결하기'}</Button><p className="text-xs text-slate-500">비밀번호는 이 탭에서만 사용하며 새로고침하면 다시 입력해요.</p></form></CardContent></Card></div>;
+}
+function MusicPreview({id,onError}:{id:string;onError:(message:string)=>void}){
+ const [src,setSrc]=useState('');
+ useEffect(()=>{
+  let active=true,url='';setSrc('');
+  mediaUrl(`/api/music/${id}`).then(value=>{url=value;if(active)setSrc(value);else URL.revokeObjectURL(value);}).catch(e=>{if(active)onError(e.message);});
+  return ()=>{active=false;if(url)URL.revokeObjectURL(url);};
+ },[id,onError]);
+ return src?<audio controls preload="none" src={src} className="w-full"/>:null;
 }
 function App(){
  const [url,setUrl]=useState(''),[text,setText]=useState(''),[title,setTitle]=useState(''),[source,setSource]=useState(''),[sourceUrl,setSourceUrl]=useState('');
@@ -37,6 +66,7 @@ function App(){
  const aiReady=!!(apiKey?creditsConfirmed:aiStatus?.configured&&(aiStatus.ready||creditsConfirmed));
  const [tracks,setTracks]=useState<Track[]>([]),[music,setMusic]=useState('salsa-new-york'),[volume,setVolume]=useState(12),[sfx,setSfx]=useState(false);
  const [result,setResult]=useState<{videoUrl:string;duration:number;subtitles:string;filename:string}|null>(null),[draftMode,setDraftMode]=useState('');
+ useEffect(()=>()=>{if(result?.videoUrl)URL.revokeObjectURL(result.videoUrl);},[result]);
  const [progress,setProgress]=useState<{percent:number;label:string;failed?:boolean}|null>(null);
  const [scriptProgress,setScriptProgress]=useState<{percent:number;label:string;failed?:boolean}|null>(null);
  const canvas=useRef<HTMLCanvasElement>(null);
@@ -92,7 +122,7 @@ function App(){
   setBusy('script');invalidate();setScriptProgress({percent:0,label:'본문과 이미지를 준비하고 있어요.'});setNotice('본문과 실제 이미지를 함께 분석해 Hook·본문·CTA 대본을 만들고 있어요.');
   try{
    await new Promise<void>(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
-   const response=await fetch('/api/script',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/x-ndjson'},body:JSON.stringify({text,title,sceneCount:count,duration,tone,speed,photos:photos.map(analysisImage),ai:{provider:aiProvider,model:aiModels[aiProvider],apiKey,creditsConfirmed}})});
+   const response=await apiFetch('/api/script',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/x-ndjson'},body:JSON.stringify({text,title,sceneCount:count,duration,tone,speed,photos:photos.map(analysisImage),ai:{provider:aiProvider,model:aiModels[aiProvider],apiKey,creditsConfirmed}})});
    const data=await readProgressStream(response,event=>setScriptProgress({percent:event.percent,label:event.label}));
    setScriptProgress({percent:100,label:'대본 생성 완료 · 장면별 문구와 이미지를 확인해 주세요.'});
    await document.fonts.ready;
@@ -115,10 +145,12 @@ function App(){
    const captions=scenes.map(captionLayers);
    const frames=scenes.map((scene,index)=>{drawFrame(surface,{headline,scene,photos,source,index,count:scenes.length,hidePhoto:!!motionLayers[index],hideCaption:true});return surface.toDataURL('image/png');});
    setProgress({percent:5,label:'장면 이미지를 서버로 보내고 있어요.'});
-   const response=await fetch('/api/render',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/x-ndjson'},body:JSON.stringify({headline,frames,motionLayers,captionLayers:captions,texts:scenes.map(s=>s.text),duration,voice,tts:{provider,voiceId,speed},audio:{music,volume:volume/100,sfx}})});
+   const response=await apiFetch('/api/render',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/x-ndjson'},body:JSON.stringify({headline,frames,motionLayers,captionLayers:captions,texts:scenes.map(s=>s.text),duration,voice,tts:{provider,voiceId,speed},audio:{music,volume:volume/100,sfx}})});
    const data=await readRenderStream(response,event=>setProgress({percent:event.percent,label:event.label}));
+   setProgress({percent:98,label:'완성 영상을 가져오고 있어요.'});
+   const videoUrl=await mediaUrl(data.videoUrl);
    setProgress({percent:100,label:'영상 생성 완료 · 미리보기와 다운로드가 준비됐어요.'});
-   setResult(data);setNotice(`${data.duration.toFixed(1)}초 · 1080 × 1920 영상이 완성됐어요.${data.narrationSpeed&&data.narrationSpeed!==data.requestedSpeed?` 60초 안에 맞추기 위해 더빙을 ${data.requestedSpeed}배에서 ${data.narrationSpeed}배로 자동 조정했어요.`:''} 미리보기 후 내려받으세요.`);
+   setResult({...data,videoUrl});setNotice(`${data.duration.toFixed(1)}초 · 1080 × 1920 영상이 완성됐어요.${data.narrationSpeed&&data.narrationSpeed!==data.requestedSpeed?` 60초 안에 맞추기 위해 더빙을 ${data.requestedSpeed}배에서 ${data.narrationSpeed}배로 자동 조정했어요.`:''} 미리보기 후 내려받으세요.`);
   }catch(e){setProgress(p=>({percent:p?.percent||0,label:'영상 생성 중단 · 아래 안내를 확인해 주세요.',failed:true}));setNotice((e as Error).message);}finally{setBusy('');}
  }
  function seek(seconds:number){
@@ -147,8 +179,8 @@ function App(){
  <p id={`caption-hint-${i}`} className="hint">입력칸 하나가 자막 한 장이에요. Enter로 두 줄까지 지정하세요. 긴 줄은 영상에서 글자가 작아져요.</p>
  {captionEditorIssue(scene.captions)&&<p role="alert" className="text-xs text-red-600">{captionEditorIssue(scene.captions)}</p>}
  </div>)}{warnings.length>0&&<div className="rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-600">{warnings.map((w,i)=><p key={i}>{w}</p>)}</div>}</Section>
- <Section step="04" title="음성과 음악" description="Roger 음성이 기본이에요. 내레이션은 문구 길이에 맞춰 장면별로 합성해요."><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={voice} onChange={e=>{setVoice(e.target.checked);invalidate();}}/><AudioLines size={16}/>TTS 내레이션 포함</label><p className="hint">{voice?`현재 더빙 속도 ${speed}배 · 위의 대본 구성에서 변경할 수 있어요.`:"내레이션을 사용하지 않아요. 다시 체크하면 선택한 음성과 속도가 적용돼요."}</p><select aria-label="내레이션 제공자" disabled={!voice} className={selectClass} value={provider} onChange={e=>{voiceChosen.current=true;setProvider(e.target.value);invalidate();}}><option value="local" disabled={!localReady}>기본 한국어 음성 · Windows / 무료</option><option value="elevenlabs" disabled={!voices.length}>ElevenLabs · 계정 크레딧 사용</option></select>{provider==='elevenlabs'&&<select aria-label="ElevenLabs 음성" disabled={!voice} value={voiceId} onChange={e=>{voiceChosen.current=true;setVoiceId(e.target.value);invalidate();}} className={selectClass}>{voices.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select>}<label className="field-label" htmlFor="music">배경음악</label><select id="music" value={music} className={selectClass} onChange={e=>{setMusic(e.target.value);invalidate();}}>{tracks.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select>{music!=='none'&&<audio controls preload="none" src={`/api/music/${music}`} className="w-full"/>}<label className="field-label" htmlFor="volume">음악 음량 {volume}%</label><input id="volume" type="range" min="0" max="50" value={volume} className="w-full" onChange={e=>{setVolume(Number(e.target.value));invalidate();}}/><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={sfx} onChange={e=>{setSfx(e.target.checked);invalidate();}}/>장면 전환 효과음</label></Section>
+ <Section step="04" title="음성과 음악" description="Roger 음성이 기본이에요. 내레이션은 문구 길이에 맞춰 장면별로 합성해요."><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={voice} onChange={e=>{setVoice(e.target.checked);invalidate();}}/><AudioLines size={16}/>TTS 내레이션 포함</label><p className="hint">{voice?`현재 더빙 속도 ${speed}배 · 위의 대본 구성에서 변경할 수 있어요.`:"내레이션을 사용하지 않아요. 다시 체크하면 선택한 음성과 속도가 적용돼요."}</p><select aria-label="내레이션 제공자" disabled={!voice} className={selectClass} value={provider} onChange={e=>{voiceChosen.current=true;setProvider(e.target.value);invalidate();}}><option value="local" disabled={!localReady}>기본 한국어 음성 · Windows / 무료</option><option value="elevenlabs" disabled={!voices.length}>ElevenLabs · 계정 크레딧 사용</option></select>{provider==='elevenlabs'&&<select aria-label="ElevenLabs 음성" disabled={!voice} value={voiceId} onChange={e=>{voiceChosen.current=true;setVoiceId(e.target.value);invalidate();}} className={selectClass}>{voices.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select>}<label className="field-label" htmlFor="music">배경음악</label><select id="music" value={music} className={selectClass} onChange={e=>{setMusic(e.target.value);invalidate();}}>{tracks.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select>{music!=='none'&&<MusicPreview id={music} onError={setNotice}/>}<label className="field-label" htmlFor="volume">음악 음량 {volume}%</label><input id="volume" type="range" min="0" max="50" value={volume} className="w-full" onChange={e=>{setVolume(Number(e.target.value));invalidate();}}/><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={sfx} onChange={e=>{setSfx(e.target.checked);invalidate();}}/>장면 전환 효과음</label></Section>
  </fieldset><aside aria-label="영상 미리보기 영역" tabIndex={0} className="preview-scroll space-y-4"><Card className="gap-0 overflow-hidden border-slate-200 py-0 shadow-none"><CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 p-4"><CardTitle className="text-sm">영상 미리보기</CardTitle><Badge variant="outline" className="text-[10px]">1080 × 1920</Badge></CardHeader><CardContent className="space-y-4 p-5"><div className="rounded-xl bg-slate-100 p-5"><canvas ref={canvas} width="720" height="1280" className="mx-auto w-full max-w-[235px] rounded-xl shadow-lg"/></div><div className="space-y-2"><div className="flex items-center justify-between text-xs"><span>장면 미리보기 {scenes.length?`${active+1} / ${scenes.length}`:''}</span><span className="font-mono text-slate-500">{scenes.length?((active+position)*duration/scenes.length).toFixed(1):'0.0'} / {duration}초</span></div><Slider min={0} max={duration} step={0.1} value={[scenes.length?(active+position)*duration/scenes.length:0]} onValueChange={([value])=>seek(value)} disabled={!!busy||!scenes.length}/><p className="text-[11px] text-slate-400">슬라이더로 장면과 사진 움직임을 확인하세요. 합성 전 예상 시점이며 음성은 완성 영상에서 재생돼요.</p></div><Button onClick={render} disabled={!!busy||(voice&&(provider==='elevenlabs'?!voices.some(v=>v.id===voiceId):!localReady))||scenes.length<4||scenes.some(s=>!!captionEditorIssue(s.captions))} className="w-full gap-2"><Clapperboard size={15}/>{busy==='render'?'영상 합성 중…':'음성·자막 영상 만들기'}</Button>{progress&&<div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3"><div className="flex items-center justify-between text-xs font-medium"><span>{progress.failed?'생성 중단':progress.percent===100?'생성 완료':'영상 생성 진행률'}</span><span className="font-mono tabular-nums">{progress.percent}%</span></div><Progress value={progress.percent} aria-label="영상 생성 진행률" aria-valuetext={`${progress.percent}% · ${progress.label}`}/><p aria-live="polite" className="text-xs leading-relaxed text-slate-600">{progress.label}</p>{busy==='render'&&<p className="text-[11px] text-slate-400">완료된 작업 단계 기준이에요. 음성 생성과 장면 합성 중에는 잠시 머무를 수 있어요.</p>}</div>}<p role="status" aria-live="polite" className="text-xs leading-relaxed text-slate-600">{notice}</p>{result&&<div className="space-y-3 border-t pt-4"><video controls playsInline src={result.videoUrl} className="max-h-[520px] w-full rounded-lg bg-black"/><a href={result.videoUrl} download={result.filename} className="flex items-center justify-center gap-2 rounded-md bg-blue-600 p-3 text-sm font-medium text-white"><Download size={15}/>MP4 내려받기</a><Button variant="outline" size="sm" className="w-full" onClick={()=>downloadText(result.subtitles,result.filename.replace(/\.mp4$/,'.srt'),'application/x-subrip')}>자막 SRT 내려받기</Button></div>}<Button variant="ghost" size="sm" onClick={credits} className="w-full gap-1"><FileText size={13}/>본문·이미지 출처 내려받기</Button></CardContent></Card><p className="px-1 text-xs leading-relaxed text-slate-400">생성된 초안의 사실과 이미지 이용 조건을 확인한 뒤 공유하세요. 작업은 현재 화면에 유지되며 새로고침하면 초기화돼요.</p></aside></div>
  <footer className="mt-10 border-t border-slate-200 pt-5 text-xs text-slate-400">블로그 투 쇼츠 · 글의 가치를 영상으로</footer></main></>;
 }
-createRoot(document.getElementById('root')!).render(<App/>);
+createRoot(document.getElementById('root')!).render(<ServerAccess/>);

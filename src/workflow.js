@@ -1,9 +1,10 @@
 import {titleLines} from './text-layout.js';
 import {PHOTO_BOX,photoMotion} from './photo-motion.js';
 import {CAPTION_BOX,CAPTION_FONT_SIZE,captionPages,captionAt,editableCaptionPages,captionEditorIssue} from './captions.js';
+import {apiFetch} from './api-client.js';
 
 export async function api(url,body){
- const response=await fetch(url,body===undefined?undefined:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+ const response=await apiFetch(url,body===undefined?undefined:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
  const data=await response.json();
  if(!response.ok)throw Error(data.error||'요청에 실패했어요.');
  return data;

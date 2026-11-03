@@ -2,6 +2,7 @@ import asyncio
 import contextlib
 import json
 import os
+import secrets
 import time
 import uuid
 from urllib.parse import urlsplit
@@ -44,18 +45,37 @@ def error(message,status=400):
 
 @app.middleware('http')
 async def origin_guard(request,call_next):
-    allowed={f'http://localhost:{port()}',f'http://127.0.0.1:{port()}',os.getenv('PUBLIC_ORIGIN')}
-    hosts={'localhost','127.0.0.1','::1',urlsplit(os.getenv('PUBLIC_ORIGIN','')).hostname}
+    allowed={f'http://localhost:{port()}',f'http://127.0.0.1:{port()}',os.getenv('PUBLIC_ORIGIN'),os.getenv('PUBLIC_API_ORIGIN')}
+    allowed.discard(None)
+    local_hosts={'localhost','127.0.0.1','::1'}
+    hosts=local_hosts|{urlsplit(os.getenv('PUBLIC_ORIGIN','')).hostname,urlsplit(os.getenv('PUBLIC_API_ORIGIN','')).hostname}
     if request.url.hostname not in hosts:
         return error('허용되지 않은 호스트',403)
-    if request.method=='POST' and request.headers.get('origin') and request.headers['origin'] not in allowed:
+    origin=request.headers.get('origin')
+    if origin and origin not in allowed:
         return error('허용되지 않은 요청',403)
-    if request.method=='POST' and request.headers.get('sec-fetch-site')=='cross-site':
+    if request.method=='POST' and request.headers.get('sec-fetch-site')=='cross-site' and origin not in allowed:
         return error('허용되지 않은 요청',403)
+    def cors(response):
+        if origin and origin in allowed:
+            response.headers['Access-Control-Allow-Origin']=origin
+            response.headers['Vary']='Origin'
+        return response
+    if request.method=='OPTIONS':
+        headers={h.strip().lower() for h in request.headers.get('access-control-request-headers','').split(',') if h.strip()}
+        if not origin or request.headers.get('access-control-request-method') not in ('GET','POST') or not headers<={'authorization','content-type','accept'}:
+            return error('허용되지 않은 요청',403)
+        return cors(Response(status_code=204,headers={'Access-Control-Allow-Methods':'GET, POST','Access-Control-Allow-Headers':'Authorization, Content-Type, Accept','Access-Control-Max-Age':'600'}))
+    token=os.getenv('SERVER_ACCESS_TOKEN','')
+    if request.url.path.startswith('/api/') and (token or request.url.hostname not in local_hosts):
+        if not token:
+            return cors(error('외부 서버의 접속 비밀번호 설정이 필요해요.',503))
+        if not secrets.compare_digest(request.headers.get('authorization','').encode(),('Bearer '+token).encode()):
+            return cors(JSONResponse({'error':'접속 비밀번호가 필요해요.'},status_code=401,headers={'Cache-Control':'no-store'}))
     response=await call_next(request)
     if request.url.path.startswith('/api/'):
         response.headers['Cache-Control']='no-store'
-    return response
+    return cors(response)
 
 
 @app.exception_handler(ValueError)
